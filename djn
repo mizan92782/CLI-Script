@@ -1,0 +1,100 @@
+#!/bin/bash
+
+show_help() {
+    echo ""
+    echo "================ Django CLI Helper ================"
+    echo "Usage: djn [command] [name]"
+    echo ""
+    echo "Available Commands:"
+    echo "  env                   Activate the Python virtual environment"
+    echo "  project [name]        Create a new Django project"
+    echo "  app [name]            Create a new Django app"
+    echo "  migration             Run makemigrations and migrate"
+    echo "  runserver             Start the Django development server"
+    echo "  superuser             Create a Django superuser"
+    echo "  rs [script_name]      Run a Django custom script"
+    echo "  --help                Show this help message"
+    echo ""
+  
+    echo "==================================================="
+    echo ""
+}
+
+
+
+
+
+# Show help if requested
+if [[ $1 == "--help" || $1 == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+# Check if at least one argument was provided
+if [ -z "$1" ]; then
+    echo "Error: No command provided. Use --help for usage information."
+    exit 1
+fi
+
+
+
+# Store the first and second argument
+option=$1
+arg2=$2
+
+case $option in
+    env)
+        echo "Activating virtual environment..."
+        source venv/bin/activate
+        ;;
+    
+    project)
+        if [ -z "$arg2" ]; then
+            echo "Error: Please provide a project name."
+            echo "Usage: ./djcli.sh project myproject"
+            exit 1
+        fi
+        echo "Creating Django project '$arg2'..."
+        python -m django startproject "$arg2"
+        cd "$arg2" || exit
+        ;;
+    
+    app)
+        if [ -z "$arg2" ]; then
+            echo "Error: Please provide an app name."
+            echo "Usage: ./djcli.sh app myapp"
+            exit 1
+        fi
+        echo "Creating Django app '$arg2'..."
+        python manage.py startapp "$arg2"
+        echo "Django app '$arg2' created successfully!"
+        ;;
+    
+    migration)
+        echo "Running makemigrations and migrate..."
+        python manage.py makemigrations
+        python manage.py migrate
+        ;;
+    
+    runserver)
+        echo "Starting Django development server..."
+        python manage.py runserver
+        ;;
+    
+    superuser)
+        echo "Creating Django superuser..."
+        python manage.py createsuperuser
+        ;;
+    
+    rs)
+        
+        python manage.py runscript "$arg2"
+        ;;
+    
+    *)
+        echo "Invalid command! Use --help for available options."
+        ;;
+esac
+
+exit 0
+

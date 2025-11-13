@@ -1,0 +1,15 @@
+# gitpush.sh
+#!/bin/bash
+
+echo "Enter commit: "
+read mycommit
+git status
+git add -A
+git commit -m "${mycommit}"
+
+
+echo "Enter branch"
+read branch
+
+git push -f origin "${branch}"
+

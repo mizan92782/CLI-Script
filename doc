@@ -1,0 +1,161 @@
+#!/bin/bash
+
+show_help() {
+    echo ""
+    echo "================ Docker CLI Helper ================"
+    echo "Usage: doc [command] [options]"
+    echo ""
+    echo "Available Commands:"
+    echo "  status                Show Docker service status"
+    echo "  start                 Start Docker service"
+    echo "  stop                  Stop Docker service"
+    echo "  restart               Restart Docker service"
+    echo "  ps                    List running containers"
+    echo "  psall                 List all containers (including stopped)"
+    echo "  run [image] [name]    Run a container from an image"
+    echo "  exec [name] [cmd]     Execute command inside container"
+    echo "  logs [name]           Show container logs"
+    echo "  stopc [name]          Stop a running container"
+    echo "  startc [name]         Start a stopped container"
+    echo "  rm [name]             Remove a container"
+    echo "  rmi [image]           Remove an image"
+    echo "  images                List all images"
+    echo "  build [path] [tag]    Build an image from Dockerfile"
+    echo "  pull [image]          Pull image from Docker Hub"
+    echo "  push [image]          Push image to Docker Hub"
+    echo "  prune                 Remove all unused containers, images, and networks"
+    echo "  --help                Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  doc status"
+    echo "  dic run nginx mynginx"
+    echo "  doc exec mynginx bash"
+    echo "  doc build . myapp:latest"
+    echo "==================================================="
+    echo ""
+}
+
+# Show help if requested
+if [[ $1 == "--help" || $1 == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+# Check if at least one argument was provided
+if [ -z "$1" ]; then
+    echo "Error: No command provided. Use --help for usage information."
+    exit 1
+fi
+
+# Store the first and second argument
+option=$1
+arg2=$2
+arg3=$3
+
+case $option in
+    status)
+        echo "Checking Docker service status..."
+        sudo systemctl status docker
+        ;;
+    
+    start)
+        echo "Starting Docker service..."
+        sudo systemctl start docker
+        ;;
+    
+    stop)
+        echo "Stopping Docker service..."
+        sudo systemctl stop docker
+        ;;
+    
+    restart)
+        echo "Restarting Docker service..."
+        sudo systemctl restart docker
+        ;;
+    
+    ps)
+        echo "Listing running containers..."
+        sudo docker ps
+        ;;
+    
+    psall)
+        echo "Listing all containers..."
+        sudo docker ps -a
+        ;;
+    
+    run)
+       
+        sudo docker run "$arg2" 
+        ;;
+        
+   runit)
+       
+        sudo docker run -it "$arg2" 
+        ;;
+  runhost)
+       
+        sudo docker run -p 8000:8000 "$arg2"
+        ;;
+        
+
+    logs)
+        sudo docker logs -f "$arg2"
+        ;;
+    
+    stopc)
+        echo "Stopping container '$arg2'..."
+        sudo ocker stop "$arg2"
+        ;;
+    
+    startc)
+        echo "Starting container '$arg2'..."
+        sudo docker start "$arg2"
+        ;;
+    
+    rm)
+        echo "Removing container '$arg2'..."
+        sudo docker rm -f "$arg2"
+        ;;
+    
+    rmi)
+        echo "Removing image '$arg2'..."
+        sudo docker rmi "$arg2"
+        ;;
+    
+    images)
+        echo "Listing all Docker images..."
+        sudo docker images
+        ;;
+    
+    build)
+        if [ -z "$arg2" ] || [ -z "$arg3" ]; then
+            echo "Error: Please provide a build path and tag name."
+            echo "Usage: doc build [path] [tag]"
+            exit 1
+        fi
+        echo "Building image '$arg3' from path '$arg2'..."
+        sudo docker build -t "$arg3" "$arg2"
+        ;;
+    
+    pull)
+        echo "Pulling image '$arg2'..."
+        sudo docker pull "$arg2"
+        ;;
+    
+    push)
+        echo "Pushing image '$arg2'..."
+        sudo docker push "$arg2"
+        ;;
+    
+    prune)
+        echo "Cleaning up unused Docker data..."
+        sudo docker system prune -af
+        ;;
+    
+    *)
+        echo "Invalid command! Use --help for available options."
+        ;;
+esac
+
+exit 0
+

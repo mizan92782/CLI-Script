@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# ====== Virtual Environment Manager for Django ======
+# Usage: ./venv_manager.sh [command]
+# Commands:
+#   create      - Create a new virtual environment
+#   activate    - Activate the virtual environment
+#   deactivate  - Deactivate the virtual environment
+#   remove      - Remove the virtual environment
+#   info        - Show venv configuration
+#   install     - Install Django and common packages
+#   list        - List installed packages
+#   help        - Show this help message
+
+VENV_DIR="venv"
+
+case "$1" in
+    create)
+        echo "Creating virtual environment in $VENV_DIR..."
+        python3 -m venv $VENV_DIR
+        echo "Done. Activate with: source $VENV_DIR/bin/activate"
+        ;;
+    
+    activate)
+        if [ -d "$VENV_DIR" ]; then
+            echo "Activating virtual environment..."
+            source $VENV_DIR/bin/activate
+        else
+            echo "Virtual environment not found. Create it first using 'create'."
+        fi
+        ;;
+    
+    deactivate)
+        echo "Deactivating virtual environment..."
+        deactivate 2>/dev/null || echo "No virtual environment active."
+        ;;
+    
+    remove)
+        echo "Removing virtual environment..."
+        rm -rf $VENV_DIR
+        echo "Removed $VENV_DIR."
+        ;;
+    
+    info)
+        if [ -f "$VENV_DIR/pyvenv.cfg" ]; then
+            echo "Showing virtual environment configuration:"
+            cat $VENV_DIR/pyvenv.cfg
+        else
+            echo "Virtual environment not found."
+        fi
+        ;;
+    
+    install)
+        if [ -d "$VENV_DIR" ]; then
+            echo "Installing Django and common packages..."
+            source $VENV_DIR/bin/activate
+            pip install --upgrade pip
+            pip install django djangorestframework django-cors-headers python-dotenv Pillow psycopg2-binary
+            echo "Packages installed."
+        else
+            echo "Virtual environment not found. Create it first."
+        fi
+        ;;
+    
+    list)
+        if [ -d "$VENV_DIR" ]; then
+            source $VENV_DIR/bin/activate
+            pip list
+        else
+            echo "Virtual environment not found."
+        fi
+        ;;
+    
+    help|*)
+        echo "Usage: $0 [command]"
+        echo "Commands:"
+        echo "  create      - Create a new virtual environment"
+        echo "  activate    - Activate the virtual environment"
+        echo "  deactivate  - Deactivate the virtual environment"
+        echo "  remove      - Remove the virtual environment"
+        echo "  info        - Show venv configuration"
+        echo "  install     - Install Django and common packages"
+        echo "  list        - List installed packages"
+        echo "  help        - Show this help message"
+        ;;
+esac
+
