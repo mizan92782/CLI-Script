@@ -77,6 +77,18 @@ echo "Show branch ================================="
 git branch
 
 
+# Option to create a new branch
+echo -n "Do you want to create a new branch? (y/n): "
+read create_branch
+
+if [[ "$create_branch" == "y" || "$create_branch" == "Y" ]]; then
+    echo -n "Enter new branch name: "
+    read new_branch
+    git branch "$new_branch"
+    echo "Branch '$new_branch' created."
+    echo ""
+fi
+
 #select branch
 echo "Select  branch name ==========================="
 read branch
