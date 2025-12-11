@@ -15,14 +15,9 @@ show_help() {
     echo "  rs [script_name]      Run a Django custom script"
     echo "  --help                Show this help message"
     echo ""
-  
     echo "==================================================="
     echo ""
 }
-
-
-
-
 
 # Show help if requested
 if [[ $1 == "--help" || $1 == "-h" ]]; then
@@ -36,11 +31,15 @@ if [ -z "$1" ]; then
     exit 1
 fi
 
-
-
 # Store the first and second argument
 option=$1
 arg2=$2
+
+# Use Python from virtual environment if activated, else default to python3
+PYTHON=python3
+if [ -n "$VIRTUAL_ENV" ]; then
+    PYTHON="$VIRTUAL_ENV/bin/python"
+fi
 
 case $option in
     env)
@@ -55,7 +54,7 @@ case $option in
             exit 1
         fi
         echo "Creating Django project '$arg2'..."
-        python -m django startproject "$arg2"
+        $PYTHON -m django startproject "$arg2"
         cd "$arg2" || exit
         ;;
     
@@ -66,29 +65,29 @@ case $option in
             exit 1
         fi
         echo "Creating Django app '$arg2'..."
-        python manage.py startapp "$arg2"
+        $PYTHON manage.py startapp "$arg2"
         echo "Django app '$arg2' created successfully!"
         ;;
     
     migration)
         echo "Running makemigrations and migrate..."
-        python manage.py makemigrations
-        python manage.py migrate
+        $PYTHON manage.py makemigrations
+        $PYTHON manage.py migrate
         ;;
     
     runserver)
         echo "Starting Django development server..."
-        python manage.py runserver
+        $PYTHON manage.py runserver
         ;;
     
     superuser)
         echo "Creating Django superuser..."
-        python manage.py createsuperuser
+        $PYTHON manage.py createsuperuser
         ;;
     
     rs)
-        
-        python manage.py runscript "$arg2"
+        $PYTHON manage.py runscript "$arg2"
+        echo "Running Scripts..................................."
         ;;
     
     *)

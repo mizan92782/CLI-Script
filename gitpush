@@ -1,15 +1,80 @@
-# gitpush.sh
 #!/bin/bash
 
-echo "Enter commit: "
-read mycommit
+show_git_help() {
+    echo "======================================="
+    echo "        GIT COMMAND REMINDER"
+    echo "======================================="
+    echo ""
+    echo "Basic Commands:"
+    echo "  git init                 - Initialize a new Git repo"
+    echo "  git clone <url>          - Clone a remote repo"
+    echo "  git status               - Show changes"
+    echo "  git add .                - Stage all changes"
+    echo "  git add <file>           - Stage a specific file"
+    echo "  git commit -m \"msg\"      - Commit with message"
+    echo "  git log                  - Show commit history"
+    echo ""
+    echo "Branching:"
+    echo "  git branch               - List branches"
+    echo "  git branch <name>        - Create branch"
+    echo "  git checkout <branch>    - Switch branch"
+    echo "  git switch <branch>      - Switch branch (newer)"
+    echo "  git merge <branch>       - Merge branch into current"
+    echo ""
+    echo "Remote Commands:"
+    echo "  git remote -v            - Show remotes"
+    echo "  git remote add origin <url> - Add remote repo"
+    echo "  git push -u origin main  - Push first time"
+    echo "  git push                 - Push changes"
+    echo "  git pull                 - Pull latest changes"
+    echo ""
+    echo "Undoing / Fixing:"
+    echo "  git reset --hard HEAD    - Undo all changes"
+    echo "  git checkout -- <file>   - Restore file"
+    echo "  git revert <commit>      - Revert a commit"
+    echo ""
+    echo "Stash Commands:"
+    echo "  git stash                - Save temporary changes"
+    echo "  git stash pop            - Restore stashed changes"
+    echo ""
+    echo "======================================="
+    echo " Run:  ./git-helper.sh help"
+    echo "======================================="
+}
+
+# Show help automatically when script runs
+if [ "$1" == "help" ]; then
+    show_git_help
+fi
+
+
+
+
+# git status
+echo "Git status ================================="
 git status
+
+# git add
+echo "Git add ===================================="
 git add -A
+
+
+# git commit
+echo "Enter commit ================================"
+read mycommit
 git commit -m "${mycommit}"
 
+# Show All branch
+echo "Show branch ================================="
+git branch
 
-echo "Enter branch"
+
+#select branch
+echo "Select  branch name ==========================="
 read branch
-
 git push -f origin "${branch}"
+
+
+# Completion
+echo "Git push completed = = = = = = = = = = = = = = = = = = = = = = = = =  "
 

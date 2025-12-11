@@ -17,14 +17,14 @@ VENV_DIR="venv"
 case "$1" in
     create)
         echo "Creating virtual environment in $VENV_DIR..."
-        python3 -m venv $VENV_DIR
+        python3 -m venv "$VENV_DIR"
         echo "Done. Activate with: source $VENV_DIR/bin/activate"
         ;;
     
     activate)
         if [ -d "$VENV_DIR" ]; then
             echo "Activating virtual environment..."
-            source $VENV_DIR/bin/activate
+            source "$VENV_DIR/bin/activate"
         else
             echo "Virtual environment not found. Create it first using 'create'."
         fi
@@ -37,34 +37,87 @@ case "$1" in
     
     remove)
         echo "Removing virtual environment..."
-        rm -rf $VENV_DIR
+        rm -rf "$VENV_DIR"
         echo "Removed $VENV_DIR."
         ;;
     
     info)
         if [ -f "$VENV_DIR/pyvenv.cfg" ]; then
             echo "Showing virtual environment configuration:"
-            cat $VENV_DIR/pyvenv.cfg
+            cat "$VENV_DIR/pyvenv.cfg"
         else
             echo "Virtual environment not found."
         fi
         ;;
     
     install)
-        if [ -d "$VENV_DIR" ]; then
-            echo "Installing Django and common packages..."
-            source $VENV_DIR/bin/activate
-            pip install --upgrade pip
-            pip install django djangorestframework django-cors-headers python-dotenv Pillow psycopg2-binary
-            echo "Packages installed."
-        else
-            echo "Virtual environment not found. Create it first."
-        fi
+        echo ""
+        echo "Select package groups to install (type numbers separated by space):"
+        echo "1) Core Django"
+        echo "2) Development Tools"
+        echo "3) REST API Tools"
+        echo "4) Authentication & Security"
+        echo "5) Storage & File Handling"
+        echo "6) Production / Deployment"
+        echo "7) Database Helpers & Filters"
+        echo "8) Database Tools (CLI/GUI)"
+        echo "9) API Viewer Tools (HTTPie + Swagger)"
+
+        read -p "Enter choices: " choices
+
+        for choice in $choices; do
+            case $choice in
+                1)
+                    echo "🔹 Installing Core Django packages..."
+                    pip install django
+                    ;;
+                2)
+                    echo "🔹 Installing Development Tools..."
+                    pip install django-extensions django-debug-toolbar
+                    ;;
+                3)
+                    echo "🔹 Installing REST API Tools..."
+                    pip install djangorestframework drf-yasg drf-spectacular djangorestframework-simplejwt
+                    ;;
+                4)
+                    echo "🔹 Installing Authentication & Security packages..."
+                    pip install django-allauth django-cors-headers
+                    ;;
+                5)
+                    echo "🔹 Installing Storage & File Handling packages..."
+                    pip install django-storages
+                    ;;
+                6)
+                    echo "🔹 Installing Production / Deployment packages..."
+                    pip install gunicorn whitenoise
+                    ;;
+                7)
+                    echo "🔹 Installing Database Helpers & Filters..."
+                    pip install django-filter django-import-export
+                    ;;
+                8)
+                    echo "🔹 Installing Database Tools..."
+                    sudo apt install -y pgcli mycli
+                    echo "💡 For GUI: DBeaver can be installed manually from https://dbeaver.io/download/"
+                    ;;
+                9)
+                    echo "🔹 Installing API Viewer Tools..."
+                    pip install httpie swagger-ui-bundle
+                    echo "💡 For GUI API testing: Postman or Insomnia can be installed manually"
+                    echo "💡 Swagger UI bundle is installed for local hosting if needed"
+                    ;;
+                *)
+                    echo "❌ Invalid choice: $choice"
+                    ;;
+            esac
+        done
+
+        echo "✅ Selected packages installed successfully!"
         ;;
     
     list)
         if [ -d "$VENV_DIR" ]; then
-            source $VENV_DIR/bin/activate
+            source "$VENV_DIR/bin/activate"
             pip list
         else
             echo "Virtual environment not found."
@@ -84,4 +137,3 @@ case "$1" in
         echo "  help        - Show this help message"
         ;;
 esac
-

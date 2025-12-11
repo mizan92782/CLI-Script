@@ -1,0 +1,5 @@
+#!/bin/bash
+
+aerich init-db
+aerich migrate
+aerich upgrade
