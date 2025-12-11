@@ -57,6 +57,7 @@ echo "UPDATE REQUIREMENT FILE ======================="
 pip freeze > requirements.txt
 echo -e "\n\n"
 
+# git status
 echo "GIT STATUS ================================="
 git status
 echo -e "\n\n"
@@ -83,7 +84,6 @@ echo -e "\n\n"
 # Option to create a new branch
 echo -n "DO YOUT WANT TO CREAT NEW BRANCH? (y/n): "
 read create_branch
-echo "Branch ${create_branch} created successfully"
 
 if [[ "$create_branch" == "y" || "$create_branch" == "Y" ]]; then
     echo -n "Enter new branch name: "
