@@ -55,26 +55,30 @@ fi
 # add requirement file
 echo "Update Requirement file ======================="
 pip freeze > requirements.txt
-
-
+echo -e "\n\n"
 
 # git status
 echo "Git status ================================="
 git status
+echo -e "\n\n"
 
 # git add
 echo "Git add ===================================="
 git add -A
-
+echo -e "\n\n"
 
 # git commit
 echo "Enter commit ================================"
 read mycommit
 git commit -m "${mycommit}"
+echo -e "\n\n"
+
 
 # Show All branch
 echo "Show branch ================================="
 git branch
+echo -e "\n\n"
+
 
 
 # Option to create a new branch
@@ -88,12 +92,16 @@ if [[ "$create_branch" == "y" || "$create_branch" == "Y" ]]; then
     echo "Branch '$new_branch' created."
     echo ""
 fi
+echo -e "\n\n"
+
+
+
 
 #select branch
 echo "Select  branch name ==========================="
 read branch
 git push -f origin "${branch}"
-
+echo -e "\n\n"
 
 
 # Completion
