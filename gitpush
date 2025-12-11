@@ -38,8 +38,12 @@ show_git_help() {
     echo "  git stash pop            - Restore stashed changes"
     echo ""
     echo "======================================="
-    echo " Run:  ./git-helper.sh help"
+    echo "Stopping script..."
+    exit
+
     echo "======================================="
+    
+    
 }
 
 # Show help automatically when script runs
@@ -47,6 +51,10 @@ if [ "$1" == "help" ]; then
     show_git_help
 fi
 
+
+# add requirement file
+echo "Update Requirement file ======================="
+pip freeze > requirements.txt
 
 
 
@@ -73,6 +81,7 @@ git branch
 echo "Select  branch name ==========================="
 read branch
 git push -f origin "${branch}"
+
 
 
 # Completion

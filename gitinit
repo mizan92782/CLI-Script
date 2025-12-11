@@ -1,13 +1,68 @@
 #!/bin/bash
+
+echo "========== Git Automation Script =========="
+
+# Show current git status
+echo "Checking git status..."
 git status
-git init
+echo ""
+
+# Initialize git repository if not already initialized
+if [ ! -d ".git" ]; then
+    echo "Initializing git repository..."
+    git init
+    echo ""
+fi
+
+# Show existing branches
+echo "Existing branches:"
+git branch
+echo ""
+
+# Option to create a new branch
+echo -n "Do you want to create a new branch? (y/n): "
+read create_branch
+
+if [[ "$create_branch" == "y" || "$create_branch" == "Y" ]]; then
+    echo -n "Enter new branch name: "
+    read new_branch
+    git branch "$new_branch"
+    echo "Branch '$new_branch' created."
+    echo ""
+fi
+
+# Switch branch
+echo -n "Enter branch name to switch to: "
+read branch
+git checkout "$branch"
+echo "Switched to branch '$branch'"
+echo ""
+
+# Stage all changes
+echo "Adding all changes..."
 git add -A
-echo "Enter commit: "
+echo ""
+
+# Commit changes
+echo -n "Enter commit message: "
 read mycommit
 git commit -m "${mycommit}"
-echo "Enter repositoy link"
-read link
-git remote add origin "${link}"
-git checkout -b main
-git push -f origin main
+echo "Commit successful!"
+echo ""
+
+# Add remote repository if not already added
+remote_exists=$(git remote)
+if [ -z "$remote_exists" ]; then
+    echo -n "Enter repository link to add remote: "
+    read link
+    git remote add origin "$link"
+    echo "Remote repository added: $link"
+    echo ""
+fi
+
+# Push to the branch
+echo "Pushing changes to branch '$branch'..."
+git push -u origin "$branch"
+echo "Push completed successfully!"
+echo "==========================================="
 
