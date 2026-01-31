@@ -1,0 +1,137 @@
+#!/bin/bash
+
+# =========================================
+# Package Management Helper (Ubuntu/Debian)
+# =========================================
+
+help() {
+cat << 'EOF'
+
+================ PACKAGE MANAGEMENT CHEAT SHEET =================
+
+🔹 UPDATE & UPGRADE
+------------------------------------------------------------
+
+# Update package index
+sudo apt update
+
+# Upgrade all upgradable packages
+sudo apt upgrade
+
+# Upgrade with full upgrade (removes obsolete packages if needed)
+sudo apt full-upgrade
+
+# Update + Upgrade in one command
+sudo apt update && sudo apt upgrade -y
+
+------------------------------------------------------------
+
+🔹 INSTALL PACKAGES
+------------------------------------------------------------
+
+# Install a package
+sudo apt install package_name
+
+# Install multiple packages
+sudo apt install package1 package2
+
+# Install specific version
+sudo apt install package_name=version
+
+# Install .deb file
+sudo dpkg -i package.deb
+
+# Fix missing dependencies after dpkg install
+sudo apt install -f
+
+------------------------------------------------------------
+
+🔹 REMOVE / PURGE PACKAGES
+------------------------------------------------------------
+
+# Remove package (keeps config files)
+sudo apt remove package_name
+
+# Remove package + config files
+sudo apt purge package_name
+
+# Remove unused dependencies
+sudo apt autoremove
+
+------------------------------------------------------------
+
+🔹 PACKAGE SEARCH & INFO
+------------------------------------------------------------
+
+# Search package
+apt search package_name
+
+# Show package info
+apt show package_name
+
+# List installed packages
+apt list --installed
+
+# List upgradable packages
+apt list --upgradable
+
+------------------------------------------------------------
+
+🔹 CHECK DEPENDENCIES
+------------------------------------------------------------
+
+# Check package dependencies
+apt depends package_name
+
+# Check reverse dependencies
+apt rdepends package_name
+
+# Check missing dependencies after dpkg install
+sudo apt install -f
+
+------------------------------------------------------------
+
+🔹 CLEAN & MAINTENANCE
+------------------------------------------------------------
+
+# Remove downloaded package files
+sudo apt clean
+
+# Remove old cached package files
+sudo apt autoclean
+
+# Check broken packages
+sudo apt check
+
+------------------------------------------------------------
+
+🔹 SNAP PACKAGES (OPTIONAL)
+------------------------------------------------------------
+
+# List installed snaps
+snap list
+
+# Install snap package
+sudo snap install package_name
+
+# Remove snap package
+sudo snap remove package_name
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ Always run `sudo apt update` before installing  
+✔ Use `sudo apt install -f` to fix broken dependencies  
+✔ Use `dpkg -i` for manual .deb install + `apt install -f` to fix deps  
+✔ `autoremove` cleans unused libraries  
+✔ `full-upgrade` handles package replacements
+
+===============================================================
+
+EOF
+}
+
+# Auto show help
+help

@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# =========================================
+# File Permissions Helper (Linux)
+# =========================================
+
+help() {
+cat << 'EOF'
+
+================ FILE PERMISSIONS CHEAT SHEET =================
+
+🔹 CHECK PERMISSIONS
+------------------------------------------------------------
+
+# Show detailed file/folder permissions
+ls -l
+ls -lh   # human-readable sizes
+
+# Show permissions including hidden files
+ls -la
+
+# View access control lists (ACLs)
+getfacl file_or_folder
+
+------------------------------------------------------------
+
+🔹 UNDERSTAND PERMISSIONS
+------------------------------------------------------------
+
+# Format: -rwxr-xr--
+# First char: - (file) / d (directory) / l (symlink)
+# Next 9 chars: user-group-others
+# r → read
+# w → write
+# x → execute
+
+# Example:
+# -rw-r--r--  1 user group 1024 Jan 1 file.txt
+# user (owner): rw- → read/write
+# group: r-- → read only
+# others: r-- → read only
+
+------------------------------------------------------------
+
+🔹 CHANGE PERMISSIONS
+------------------------------------------------------------
+
+# Symbolic method
+chmod u+x file.txt   # Add execute for owner
+chmod g-w file.txt   # Remove write for group
+chmod o+r file.txt   # Add read for others
+chmod a+x file.txt   # Add execute for all (u+g+o)
+chmod a-rwx file.txt # Remove all permissions for everyone
+
+# Numeric / octal method
+chmod 755 file.txt   # rwx r-x r-x
+chmod 644 file.txt   # rw- r-- r--
+chmod 700 file.txt   # rwx --- ---
+chmod 777 file.txt   # rwx rwx rwx (⚠ risky!)
+
+------------------------------------------------------------
+
+🔹 CHANGE OWNER & GROUP
+------------------------------------------------------------
+
+# Change owner
+sudo chown newuser file.txt
+
+# Change group
+sudo chgrp newgroup file.txt
+
+# Change owner and group together
+sudo chown newuser:newgroup file.txt
+
+# Change recursively (for folders)
+sudo chown -R newuser:newgroup folder_name
+sudo chmod -R 755 folder_name
+
+------------------------------------------------------------
+
+🔹 EXECUTABLE FILES
+------------------------------------------------------------
+
+# Make a script executable
+chmod +x script.sh
+
+# Run executable file
+./script.sh
+
+------------------------------------------------------------
+
+🔹 SPECIAL PERMISSIONS
+------------------------------------------------------------
+
+# Setuid → execute as file owner
+chmod u+s file
+
+# Setgid → execute as group owner
+chmod g+s folder
+
+# Sticky bit → only owner can delete file in folder
+chmod +t folder
+
+# Check special permissions
+ls -l
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ ls -l → always first to check permissions  
+✔ chmod u/g/o → symbolic method is easier to remember  
+✔ chmod 777 → only for testing (not secure)  
+✔ chown/chgrp → adjust owner and group  
+✔ Sticky bit → useful for shared folders (/tmp style)
+
+===============================================================
+
+EOF
+}
+
+# Auto show help
+help

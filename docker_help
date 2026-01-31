@@ -1,0 +1,208 @@
+#!/bin/bash
+
+# =========================================
+# Docker Commands Helper (Linux)
+# =========================================
+
+help() {
+cat << 'EOF'
+
+===================== DOCKER CHEAT SHEET =====================
+
+🔹 CHECK DOCKER VERSION & STATUS
+------------------------------------------------------------
+
+# Check Docker version
+docker --version
+
+# Check Docker info
+docker info
+
+# Check Docker service status
+sudo systemctl status docker
+
+# Start Docker service
+sudo systemctl start docker
+
+# Enable Docker to run on boot
+sudo systemctl enable docker
+
+------------------------------------------------------------
+
+🔹 DOCKER IMAGES
+------------------------------------------------------------
+
+# List downloaded images
+docker images
+docker image ls
+
+# Pull image from Docker Hub
+docker pull image_name:tag
+
+# Remove an image
+docker rmi image_name
+
+# Build image from Dockerfile
+docker build -t image_name:tag .
+
+# Show history of an image
+docker history image_name
+
+# Tag image for Docker Hub
+docker tag local_image_name username/repo_name:tag
+
+# Push image to Docker Hub
+docker push username/repo_name:tag
+
+------------------------------------------------------------
+
+🔹 DOCKER CONTAINERS
+------------------------------------------------------------
+
+# List running containers
+docker ps
+
+# List all containers (including stopped)
+docker ps -a
+
+# Run a container (interactive)
+docker run -it --name container_name image_name
+
+# Run container in background (detached)
+docker run -d --name container_name image_name
+
+# Start a stopped container
+docker start container_name
+
+# Stop a running container
+docker stop container_name
+
+# Restart a container
+docker restart container_name
+
+# Remove container
+docker rm container_name
+
+# Remove all stopped containers
+docker container prune
+
+------------------------------------------------------------
+
+🔹 WORK WITH A SPECIFIC CONTAINER
+------------------------------------------------------------
+
+# Attach to a running container
+docker attach container_name
+
+# Execute command inside a running container
+docker exec -it container_name bash
+
+# View container logs
+docker logs container_name
+docker logs -f container_name   # live logs
+
+# Stop container gracefully
+docker stop container_name
+
+# Kill container forcefully
+docker kill container_name
+
+# Pause container
+docker pause container_name
+
+# Resume container
+docker unpause container_name
+
+------------------------------------------------------------
+
+🔹 DOCKER VOLUMES
+------------------------------------------------------------
+
+# List volumes
+docker volume ls
+
+# Create volume
+docker volume create volume_name
+
+# Inspect volume
+docker volume inspect volume_name
+
+# Remove volume
+docker volume rm volume_name
+
+------------------------------------------------------------
+
+🔹 DOCKER NETWORKS
+------------------------------------------------------------
+
+# List networks
+docker network ls
+
+# Inspect network
+docker network inspect network_name
+
+# Create network
+docker network create network_name
+
+# Connect container to network
+docker network connect network_name container_name
+
+# Disconnect container from network
+docker network disconnect network_name container_name
+
+------------------------------------------------------------
+
+🔹 DOCKER COMPOSE (if installed)
+------------------------------------------------------------
+
+# Start services from docker-compose.yml
+docker-compose up -d
+
+# Stop services
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Build or rebuild services
+docker-compose build
+
+------------------------------------------------------------
+
+🔹 CLEANUP
+------------------------------------------------------------
+
+# Remove all stopped containers
+docker container prune
+
+# Remove unused images
+docker image prune
+
+# Remove unused volumes
+docker volume prune
+
+# Remove unused networks
+docker network prune
+
+# Remove all unused resources
+docker system prune -a
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ Always name containers for easier management  
+✔ Use `docker exec -it` to interact with a running container  
+✔ `docker logs -f` → live logs of container  
+✔ Use volumes for persistent data  
+✔ Tag & push images to Docker Hub with `docker tag` + `docker push`  
+✔ `docker system prune -a` → clean everything not in use  
+
+===============================================================
+
+EOF
+}
+
+# Auto show help
+help

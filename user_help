@@ -1,0 +1,154 @@
+#!/bin/bash
+
+# =========================================
+# User & Group Management Helper (Linux)
+# =========================================
+
+help() {
+cat << 'EOF'
+
+=============== USER & GROUP MANAGEMENT CHEAT SHEET ===============
+
+🔹 LIST USERS & GROUPS
+------------------------------------------------------------
+
+# List all users
+cat /etc/passwd
+
+# List only usernames
+cut -d: -f1 /etc/passwd
+
+# List all groups
+cat /etc/group
+
+# List only group names
+cut -d: -f1 /etc/group
+
+# Show groups of a specific user
+groups username
+
+------------------------------------------------------------
+
+🔹 ADD USERS
+------------------------------------------------------------
+
+# Add a new user
+sudo adduser username
+# This will also prompt to set password and create home folder
+
+# Add user without home directory
+sudo useradd -M username
+
+# Add user with specific home directory
+sudo useradd -d /home/customfolder username
+
+# Add user with specific shell
+sudo useradd -s /bin/bash username
+
+------------------------------------------------------------
+
+🔹 DELETE USERS
+------------------------------------------------------------
+
+# Delete user but keep home directory
+sudo deluser username
+
+# Delete user and home directory
+sudo deluser --remove-home username
+
+# Force remove user and all files owned by them
+sudo deluser --remove-all-files username
+
+------------------------------------------------------------
+
+🔹 MODIFY USERS
+------------------------------------------------------------
+
+# Change user password
+sudo passwd username
+
+# Add user to a group
+sudo usermod -aG groupname username
+
+# Change user's primary group
+sudo usermod -g groupname username
+
+# Change username
+sudo usermod -l newname oldname
+
+# Change home directory
+sudo usermod -d /new/home/dir username
+
+------------------------------------------------------------
+
+🔹 ADD GROUPS
+------------------------------------------------------------
+
+# Add new group
+sudo addgroup groupname
+
+# Add existing user to new group
+sudo usermod -aG groupname username
+
+------------------------------------------------------------
+
+🔹 DELETE GROUPS
+------------------------------------------------------------
+
+# Delete group
+sudo delgroup groupname
+
+# Delete group and remove user from it
+sudo delgroup groupname username
+
+------------------------------------------------------------
+
+🔹 CHECK GROUP MEMBERS
+------------------------------------------------------------
+
+# List members of a group
+getent group groupname
+
+# Show groups for a user
+groups username
+
+------------------------------------------------------------
+
+🔹 LOGIN & SHELL RELATED
+------------------------------------------------------------
+
+# Switch user
+su - username
+
+# Switch user and execute a command
+su - username -c "command"
+
+# Show current user
+whoami
+
+# Show logged-in users
+who
+w
+
+# Show last login of users
+lastlog
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ adduser → interactive, recommended  
+✔ useradd → manual, needs options  
+✔ deluser/delgroup → remove safely  
+✔ usermod -aG → always append to group, don’t forget -a  
+✔ /etc/passwd → stores user info  
+✔ /etc/group → stores group info
+
+===============================================================
+
+EOF
+}
+
+# Auto show help
+help
