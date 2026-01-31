@@ -1,0 +1,145 @@
+#!/bin/bash
+
+# =========================================
+# Port Commands Helper for Ubuntu/Linux
+# =========================================
+
+help() {
+cat << 'EOF'
+
+================= PORT COMMANDS CHEAT SHEET =================
+
+🔹 CHECK OPEN / LISTENING PORTS
+------------------------------------------------------------
+
+# Show all listening ports (TCP & UDP)
+sudo ss -tuln
+
+# Show listening ports with process name & PID
+sudo ss -tulnp
+
+# Using netstat (legacy but still useful)
+sudo netstat -tuln
+sudo netstat -tulnp
+
+# List all open ports
+sudo lsof -i
+sudo lsof -i -P -n
+
+------------------------------------------------------------
+
+🔹 CHECK SPECIFIC PORT
+------------------------------------------------------------
+
+# Check if a specific port is in use (example: 8000)
+sudo ss -tuln | grep 8000
+sudo netstat -tuln | grep 8000
+sudo lsof -i :8000
+
+------------------------------------------------------------
+
+🔹 FIND WHICH PROCESS IS USING A PORT
+------------------------------------------------------------
+
+# Find process using a port
+sudo lsof -i :PORT_NUMBER
+
+# Example
+sudo lsof -i :3306
+
+------------------------------------------------------------
+
+🔹 KILL PROCESS RUNNING ON A PORT
+------------------------------------------------------------
+
+# Kill process by port
+sudo kill -9 $(sudo lsof -t -i:PORT_NUMBER)
+
+# Example
+sudo kill -9 $(sudo lsof -t -i:8000)
+
+------------------------------------------------------------
+
+🔹 TEST IF A PORT IS OPEN
+------------------------------------------------------------
+
+# Using nc (netcat)
+nc -zv localhost 8000
+
+# Using telnet
+telnet localhost 8000
+
+------------------------------------------------------------
+
+🔹 OPEN / CLOSE PORT USING UFW (Firewall)
+------------------------------------------------------------
+
+# Check UFW status
+sudo ufw status
+
+# Allow a port
+sudo ufw allow 8000
+
+# Allow TCP/UDP specifically
+sudo ufw allow 8000/tcp
+sudo ufw allow 8000/udp
+
+# Deny a port
+sudo ufw deny 8000
+
+# Delete rule
+sudo ufw delete allow 8000
+
+------------------------------------------------------------
+
+🔹 CHECK PORT RANGE
+------------------------------------------------------------
+
+# Check ports from 8000 to 8100
+for port in {8000..8100}; do ss -tuln | grep ":$port"; done
+
+------------------------------------------------------------
+
+🔹 CHECK EXTERNAL PORT ACCESS
+------------------------------------------------------------
+
+# Using nmap (install first)
+sudo apt install nmap
+
+# Scan local machine
+nmap localhost
+
+# Scan specific port
+nmap -p 8000 localhost
+
+------------------------------------------------------------
+
+🔹 COMMON SERVICE PORTS
+------------------------------------------------------------
+
+80    → HTTP
+443   → HTTPS
+22    → SSH
+3306  → MySQL
+5432  → PostgreSQL
+6379  → Redis
+8000  → Django Dev Server
+8080  → Alternative HTTP
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ ss is faster and preferred over netstat
+✔ lsof is best for finding process using a port
+✔ ufw manages firewall rules
+✔ nmap checks external accessibility
+
+============================================================
+
+EOF
+}
+
+# Call help if script is run directly
+help

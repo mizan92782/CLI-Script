@@ -1,0 +1,156 @@
+#!/bin/bash
+
+# =========================================
+# systemctl Commands Helper (systemd)
+# =========================================
+
+help() {
+cat << 'EOF'
+
+================ SYSTEMCTL COMMANDS CHEAT SHEET ================
+
+🔹 BASIC SERVICE CONTROL
+------------------------------------------------------------
+
+# Start a service
+sudo systemctl start service_name
+
+# Stop a service
+sudo systemctl stop service_name
+
+# Restart a service
+sudo systemctl restart service_name
+
+# Reload service (without restart)
+sudo systemctl reload service_name
+
+------------------------------------------------------------
+
+🔹 SERVICE STATUS & INFO
+------------------------------------------------------------
+
+# Check service status
+systemctl status service_name
+
+# Check if service is active
+systemctl is-active service_name
+
+# Check if service is enabled
+systemctl is-enabled service_name
+
+------------------------------------------------------------
+
+🔹 ENABLE / DISABLE AT BOOT
+------------------------------------------------------------
+
+# Enable service at startup
+sudo systemctl enable service_name
+
+# Disable service at startup
+sudo systemctl disable service_name
+
+------------------------------------------------------------
+
+🔹 LIST SERVICES
+------------------------------------------------------------
+
+# List all services
+systemctl list-units --type=service
+
+# List running services
+systemctl list-units --type=service --state=running
+
+# List failed services
+systemctl list-units --type=service --state=failed
+
+------------------------------------------------------------
+
+🔹 SERVICE LOGS (JOURNALCTL)
+------------------------------------------------------------
+
+# View logs for a service
+journalctl -u service_name
+
+# View recent logs
+journalctl -u service_name -n 50
+
+# Live log view
+journalctl -u service_name -f
+
+------------------------------------------------------------
+
+🔹 SYSTEM STATE
+------------------------------------------------------------
+
+# Check system boot status
+systemctl is-system-running
+
+# Show boot time info
+systemd-analyze
+
+------------------------------------------------------------
+
+🔹 RELOAD SYSTEMD CONFIG
+------------------------------------------------------------
+
+# Reload systemd manager config
+sudo systemctl daemon-reexec
+
+# Reload unit files
+sudo systemctl daemon-reload
+
+------------------------------------------------------------
+
+🔹 MASK / UNMASK SERVICES
+------------------------------------------------------------
+
+# Prevent service from running
+sudo systemctl mask service_name
+
+# Allow service to run again
+sudo systemctl unmask service_name
+
+------------------------------------------------------------
+
+🔹 POWER MANAGEMENT
+------------------------------------------------------------
+
+# Shutdown system
+sudo systemctl poweroff
+
+# Reboot system
+sudo systemctl reboot
+
+# Suspend system
+sudo systemctl suspend
+
+------------------------------------------------------------
+
+🔹 COMMON SERVICES
+------------------------------------------------------------
+
+nginx
+apache2
+mysql
+postgresql
+docker
+ssh
+redis
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ systemctl status → best debugging tool
+✔ journalctl -u → service logs
+✔ enable ≠ start (boot vs current)
+✔ daemon-reload → after unit file changes
+
+===============================================================
+
+EOF
+}
+
+# Auto show help
+help

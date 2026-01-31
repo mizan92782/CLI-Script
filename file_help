@@ -1,0 +1,202 @@
+#!/bin/bash
+
+# =========================================
+# File & Directory Commands Helper
+# =========================================
+
+help() {
+cat << 'EOF'
+
+=========== FILE & DIRECTORY COMMANDS CHEAT SHEET ===========
+
+🔹 BASIC NAVIGATION
+------------------------------------------------------------
+
+# Show current directory
+pwd
+
+# List files and folders
+ls
+ls -l        # long list
+ls -a        # show hidden files
+ls -lh       # human readable size
+
+# Change directory
+cd folder_name
+cd ..        # one level up
+cd ~         # home directory
+cd /         # root directory
+
+------------------------------------------------------------
+
+🔹 CREATE FILES & DIRECTORIES
+------------------------------------------------------------
+
+# Create empty file
+touch file.txt
+
+# Create directory
+mkdir folder_name
+
+# Create nested directories
+mkdir -p parent/child/grandchild
+
+------------------------------------------------------------
+
+🔹 COPY FILES & DIRECTORIES
+------------------------------------------------------------
+
+# Copy file
+cp file1.txt file2.txt
+
+# Copy file to directory
+cp file.txt /path/to/dir/
+
+# Copy directory recursively
+cp -r source_dir target_dir
+
+------------------------------------------------------------
+
+🔹 MOVE / RENAME FILES
+------------------------------------------------------------
+
+# Rename file
+mv old.txt new.txt
+
+# Move file
+mv file.txt /path/to/dir/
+
+# Move directory
+mv dir1 /path/to/dir2/
+
+------------------------------------------------------------
+
+🔹 DELETE FILES & DIRECTORIES
+------------------------------------------------------------
+
+# Delete file
+rm file.txt
+
+# Delete multiple files
+rm file1.txt file2.txt
+
+# Delete directory (empty)
+rmdir folder_name
+
+# Delete directory recursively
+rm -r folder_name
+
+# Force delete (⚠ dangerous)
+rm -rf folder_name
+
+------------------------------------------------------------
+
+🔹 VIEW FILE CONTENT
+------------------------------------------------------------
+
+# View file content
+cat file.txt
+
+# View page by page
+less file.txt
+more file.txt
+
+# View first lines
+head file.txt
+head -n 20 file.txt
+
+# View last lines
+tail file.txt
+tail -n 20 file.txt
+
+# Live log view
+tail -f file.log
+
+------------------------------------------------------------
+
+🔹 FILE PERMISSIONS
+------------------------------------------------------------
+
+# View permissions
+ls -l
+
+# Change permissions
+chmod 755 file.sh
+chmod +x script.sh
+
+# Change owner
+sudo chown user:group file.txt
+
+------------------------------------------------------------
+
+🔹 FILE SEARCH
+------------------------------------------------------------
+
+# Find file by name
+find /path -name file.txt
+
+# Find all .txt files
+find . -name "*.txt"
+
+# Find files larger than 100MB
+find / -size +100M
+
+------------------------------------------------------------
+
+🔹 FILE SIZE & DISK USAGE
+------------------------------------------------------------
+
+# File size
+du -h file.txt
+
+# Folder size
+du -sh folder_name
+
+# Disk usage
+df -h
+
+------------------------------------------------------------
+
+🔹 FILE TYPE & INFO
+------------------------------------------------------------
+
+# Check file type
+file file.txt
+
+# Detailed file info
+stat file.txt
+
+------------------------------------------------------------
+
+🔹 ARCHIVE & COMPRESS
+------------------------------------------------------------
+
+# Create tar archive
+tar -cvf archive.tar folder/
+
+# Extract tar archive
+tar -xvf archive.tar
+
+# Create tar.gz
+tar -czvf archive.tar.gz folder/
+
+# Extract tar.gz
+tar -xzvf archive.tar.gz
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ ls -lh → best listing view
+✔ rm -rf → use carefully
+✔ find → very powerful
+✔ chmod +x → make executable
+
+============================================================
+
+EOF
+}
+
+# Auto show help
+help

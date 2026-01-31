@@ -1,0 +1,176 @@
+#!/bin/bash
+
+# =========================================
+# Network Commands Helper for Ubuntu/Linux
+# =========================================
+
+help() {
+cat << 'EOF'
+
+================ NETWORK COMMANDS CHEAT SHEET ================
+
+🔹 BASIC NETWORK INFO
+------------------------------------------------------------
+
+# Show IP address
+ip a
+ip addr show
+
+# Old command (still works)
+ifconfig
+
+# Show hostname
+hostname
+hostname -I
+
+------------------------------------------------------------
+
+🔹 CHECK INTERNET CONNECTIVITY
+------------------------------------------------------------
+
+# Ping a host
+ping google.com
+
+# Ping with count
+ping -c 4 google.com
+
+------------------------------------------------------------
+
+🔹 NETWORK INTERFACES
+------------------------------------------------------------
+
+# List network interfaces
+ip link show
+
+# Enable interface
+sudo ip link set eth0 up
+
+# Disable interface
+sudo ip link set eth0 down
+
+------------------------------------------------------------
+
+🔹 ROUTING & GATEWAY
+------------------------------------------------------------
+
+# Show routing table
+ip route
+route -n
+
+------------------------------------------------------------
+
+🔹 DNS INFORMATION
+------------------------------------------------------------
+
+# DNS lookup
+nslookup google.com
+
+# Using dig
+dig google.com
+
+------------------------------------------------------------
+
+🔹 OPEN / LISTENING PORTS
+------------------------------------------------------------
+
+# Show listening ports
+sudo ss -tuln
+
+# Show ports with process
+sudo ss -tulnp
+
+------------------------------------------------------------
+
+🔹 TEST PORT CONNECTIVITY
+------------------------------------------------------------
+
+# Using nc (netcat)
+nc -zv localhost 80
+
+# Using telnet
+telnet localhost 80
+
+------------------------------------------------------------
+
+🔹 DOWNLOAD / UPLOAD
+------------------------------------------------------------
+
+# Download file
+wget https://example.com/file.zip
+
+# Download with curl
+curl -O https://example.com/file.zip
+
+# API request
+curl -X GET https://api.example.com
+
+------------------------------------------------------------
+
+🔹 NETWORK SCANNING
+------------------------------------------------------------
+
+# Install nmap
+sudo apt install nmap
+
+# Scan localhost
+nmap localhost
+
+# Scan specific port
+nmap -p 22 localhost
+
+------------------------------------------------------------
+
+🔹 FIREWALL (UFW)
+------------------------------------------------------------
+
+# Firewall status
+sudo ufw status
+
+# Enable firewall
+sudo ufw enable
+
+# Allow port
+sudo ufw allow 80
+
+# Deny port
+sudo ufw deny 80
+
+# Delete rule
+sudo ufw delete allow 80
+
+------------------------------------------------------------
+
+🔹 ACTIVE CONNECTIONS
+------------------------------------------------------------
+
+# Show active connections
+ss -tunap
+
+------------------------------------------------------------
+
+🔹 NETWORK TRAFFIC MONITORING
+------------------------------------------------------------
+
+# Install iftop
+sudo apt install iftop
+
+# Run iftop
+sudo iftop
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ ip a → modern replacement of ifconfig
+✔ ss → faster than netstat
+✔ curl → best for API testing
+✔ nmap → security & port scan tool
+
+============================================================
+
+EOF
+}
+
+# Auto show help
+help

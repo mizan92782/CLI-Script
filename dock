@@ -3,6 +3,17 @@
 show_help() {
     echo ""
     echo "================ Docker CLI Helper ================"
+    echo "install  : sudo apt install docker.io -y"
+    echo "run without sudo : sudo usermod -aG docker $USER"
+    echo "check user in docker group: getent group docker"
+    echo "refresh group permissin : newgrp docker"
+    echo ""
+    echo "================ image============="
+    echo "image build  : docker build -t <docker_file_name>"
+    echo ""
+    echo "================ run ===================="
+    echo "docker run : docker run <image name>"
+    
     echo "Usage: doc [command] [options]"
     echo ""
     echo "Available Commands:"

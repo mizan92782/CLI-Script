@@ -63,8 +63,9 @@ git status
 echo -e "\n\n"
 
 # git add
-echo "GIT ADD ===================================="
+echo "GIT ADD ALL ===================================="
 git add -A
+git status
 echo -e "\n\n"
 
 # git commit

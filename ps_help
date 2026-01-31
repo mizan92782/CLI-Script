@@ -1,0 +1,198 @@
+#!/bin/bash
+
+# =========================================
+# Process Commands Helper for Ubuntu/Linux
+# =========================================
+
+help() {
+cat << 'EOF'
+
+================ PROCESS COMMANDS CHEAT SHEET ================
+
+🔹 VIEW RUNNING PROCESSES
+------------------------------------------------------------
+
+# Show all running processes
+ps aux
+
+# Show processes for current user
+ps ux
+
+# Real-time process monitor
+top
+
+# Improved real-time monitor (install first)
+sudo apt install htop
+htop
+
+------------------------------------------------------------
+
+🔹 FIND A SPECIFIC PROCESS
+------------------------------------------------------------
+
+# Search process by name
+ps aux | grep process_name
+
+# Example
+ps aux | grep python
+
+# Using pgrep (cleaner)
+pgrep python
+
+# Show PID with process name
+pgrep -l python
+
+------------------------------------------------------------
+
+🔹 PROCESS DETAILS
+------------------------------------------------------------
+
+# Show detailed info for a PID
+ps -fp PID
+
+# Example
+ps -fp 1234
+
+# Show process tree
+pstree
+pstree -p
+
+------------------------------------------------------------
+
+🔹 CPU & MEMORY USAGE
+------------------------------------------------------------
+
+# Sort by CPU usage
+ps aux --sort=-%cpu | head
+
+# Sort by memory usage
+ps aux --sort=-%mem | head
+
+------------------------------------------------------------
+
+🔹 KILL / STOP PROCESSES
+------------------------------------------------------------
+
+# Kill process by PID
+kill PID
+
+# Force kill
+kill -9 PID
+
+# Kill process by name
+pkill process_name
+
+# Kill with confirmation
+pkill -SIGTERM process_name
+
+# Example
+pkill python
+
+------------------------------------------------------------
+
+🔹 RUN PROCESS IN BACKGROUND
+------------------------------------------------------------
+
+# Run command in background
+command &
+
+# Example
+python manage.py runserver &
+
+# List background jobs
+jobs
+
+# Bring job to foreground
+fg %job_number
+
+# Send job to background
+bg %job_number
+
+------------------------------------------------------------
+
+🔹 PROCESS PRIORITY (NICE)
+------------------------------------------------------------
+
+# Start process with priority
+nice -n 10 command
+
+# Change priority of running process
+renice -n 5 -p PID
+
+------------------------------------------------------------
+
+🔹 START / STOP SERVICES (SYSTEMD)
+------------------------------------------------------------
+
+# Check service status
+systemctl status service_name
+
+# Start service
+sudo systemctl start service_name
+
+# Stop service
+sudo systemctl stop service_name
+
+# Restart service
+sudo systemctl restart service_name
+
+# Enable at boot
+sudo systemctl enable service_name
+
+# Disable at boot
+sudo systemctl disable service_name
+
+------------------------------------------------------------
+
+🔹 CHECK ZOMBIE / DEFUNCT PROCESSES
+------------------------------------------------------------
+
+# Find zombie processes
+ps aux | grep Z
+
+------------------------------------------------------------
+
+🔹 OPEN FILES BY PROCESS
+------------------------------------------------------------
+
+# Files opened by a PID
+lsof -p PID
+
+# Network files by process
+lsof -i -p PID
+
+------------------------------------------------------------
+
+🔹 ENVIRONMENT VARIABLES OF PROCESS
+------------------------------------------------------------
+
+# View env vars of process
+cat /proc/PID/environ | tr '\0' '\n'
+
+------------------------------------------------------------
+
+🔹 PROCESS SIGNALS
+------------------------------------------------------------
+
+SIGTERM (15) → Graceful stop
+SIGKILL (9)  → Force stop
+SIGSTOP (19) → Pause process
+SIGCONT (18) → Resume process
+
+------------------------------------------------------------
+
+🔹 QUICK TIPS
+------------------------------------------------------------
+
+✔ ps aux → best overall snapshot
+✔ top / htop → real-time monitoring
+✔ pkill → fastest kill by name
+✔ systemctl → manage background services
+
+============================================================
+
+EOF
+}
+
+# Call help when script runs
+help
