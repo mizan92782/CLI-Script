@@ -54,6 +54,7 @@ requests==2.31.0
 rich==13.7.1
 setuptools==68.1.2
 six==1.16.0
+ssh-import-id==5.11
 systemd-python==235
 typing_extensions==4.10.0
 ubuntu-drivers-common==0.0.0

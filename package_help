@@ -103,6 +103,9 @@ sudo apt autoclean
 # Check broken packages
 sudo apt check
 
+
+
+
 ------------------------------------------------------------
 
 🔹 SNAP PACKAGES (OPTIONAL)
