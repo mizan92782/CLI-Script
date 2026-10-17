@@ -1,211 +1,421 @@
-# 🚀 DevOps & Linux Shell Automation Toolkit
+# 🚀 DevOps & Linux CLI Automation Toolkit
 
-A production-grade collection of bash automation utilities, developer helpers, and administrative cheat-sheets designed for Linux servers and development environments.
+[![Bash](https://img.shields.io/badge/Language-Bash%20%2F%20Shell-4EAA25?logo=gnu-bash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![Linux](https://img.shields.io/badge/Platform-Ubuntu%20%7C%20Debian%20%7C%20Linux-FCC624?logo=linux&logoColor=black)](https://ubuntu.com)
+[![Docker](https://img.shields.io/badge/Containers-Docker%20%26%20Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/Backend-Django%205%20%7C%20FastAPI-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
----
+Production-grade shell automation scripts, developer CLI utilities, and administrative cheat-sheets for Linux servers and development machines.
 
-## 📑 Table of Contents
-
-- [Overview](#-overview)
-- [Tool Categories & Inventory](#-tool-categories--inventory)
-  - [1. Web Frameworks & Environments](#1-web-frameworks--environments)
-  - [2. Docker & Container Operations](#2-docker--container-operations)
-  - [3. Database Management](#3-database-management)
-  - [4. Git & Version Control](#4-git--version-control)
-  - [5. System Administration & Helper Hub](#5-system-administration--helper-hub)
-  - [6. Media & Download Utilities](#6-media--download-utilities)
-- [Quick Start](#-quick-start)
-- [Detailed Tool Guide](#-detailed-tool-guide)
-- [License](#-license)
+> [!TIP]
+> **Zero Installation Required:** You can run any script below directly on any server using `curl` and `bash` without cloning the repository!
 
 ---
 
-## 🌟 Overview
+## ⚡ Master Quick-Run Reference (Direct Curl One-Liners)
 
-This repository provides streamlined, automated shell scripts to simplify repetitive tasks across server deployment, local development, container orchestration, database administration, and Linux system diagnostics.
-
-All scripts feature:
-- ✅ **Argument Validation**: Safe defaults and interactive fallback prompts.
-- ✅ **Color-Coded Status Output**: Clear visual feedback (info, warnings, errors).
-- ✅ **Robust Error Handling**: Exit code management and system checks.
-- ✅ **Non-Root & Sudo Awareness**: Auto-detects permissions to prevent unnecessary `sudo` prompts.
+| Tool | Category | Quick One-Liner (Run via GitHub) | Key Attributes & Arguments |
+| :--- | :--- | :--- | :--- |
+| **[`djinit`](#1-djinit--djangosetupsh)** | Django / Docker | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djinit) [project_name]` | `[project_name]` (e.g. `my_api_service`) |
+| **[`djn`](#2-djn-django-cli-helper)** | Django CLI | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djn) [command]` | `runserver`, `mig`, `resetmig`, `resetall`, `superuser`, `app`, `shell` |
+| **[`fapi`](#4-fapi-fastapi-cli-helper)** | FastAPI / Aerich | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fapi) [command]` | `run [port]`, `prod [port]`, `migrate`, `init-db`, `upgrade` |
+| **[`dock`](#6-dock-docker-manager)** | Docker CLI | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/dock) [command]` | `ps`, `run`, `runhost`, `exec`, `logs`, `stats`, `compose`, `install` |
+| **[`docker_reinstall`](#7-dockerreinstall)** | Docker Engine | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/docker_reinstall)` | *None (Automated CE + Compose installer)* |
+| **[`pgsql`](#9-pgsql-postgresql-manager)** | PostgreSQL | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/pgsql)` | *None (Interactive menu 1-14)* |
+| **[`gitinit`](#10-gitinit)** | Git Automation | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitinit)` | *None (Interactive initialization)* |
+| **[`gitpush`](#11-gitpush)** | Git Automation | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitpush)` | *None (Interactive commit & push)* |
+| **[`syshelp`](#12-syshelp-system-navigator)** | Cheat Sheets | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/syshelp) [topic]` | `docker`, `net`, `port`, `ps`, `pkg`, `perm`, `sys`, `user`, `file` |
+| **[`update`](#14-update)** | System Maintenance | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/update)` | *None (Apt update, upgrade & autoremove)* |
+| **[`bsp`](#15-bsp)** | Utilities | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/bsp) <file1> [file2...]` | `<file1> [file2...]` (Makes files executable) |
+| **[`media_dl`](#16-mediadl-unified-media-downloader)** | Media Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl) [options] <URL>` | `-a` (Audio MP3), `-v` (Video MP4), `-b` (Best), `-o <DIR>` |
+| **[`audio`](#17-audio)** | Audio Extractor | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/audio) "<URL>" [output_dir]` | `"<URL>" [output_dir]` (MP3 320kbps) |
+| **[`video`](#18-video)** | Video Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "<URL>" [output_dir]` | `"<URL>" [output_dir]` (Resolution menu) |
+| **[`envrn`](#3-envrn-virtual-environment-manager)** | Python venv | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) [command]` | `create`, `activate`, `remove`, `info`, `install`, `list` |
+| **[`newmig`](#2-djn-django-cli-helper)** | Django Migrations | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/newmig)` | *None (Wipes migrations & db.sqlite3)* |
+| **[`dauto`](#2-djn-django-cli-helper)** | Django Reset | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/dauto)` | *None (Wipes migrations, db, & rebuilds venv)* |
+| **[`fastrun`](#5-fastrun--fastmig)** | FastAPI Server | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fastrun) [port]` | `[port]` (Default: 8000) |
+| **[`fastmig`](#5-fastrun--fastmig)** | FastAPI Migrations | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fastmig)` | *None (Aerich migrate & upgrade)* |
 
 ---
 
-## 🛠 Tool Categories & Inventory
+## 📖 Detailed Tool Documentation & Attributes
 
-| Category | Scripts | Primary Function |
+### 🐍 Django & Python Automation
+
+---
+
+#### 1. `djinit` / `django_setup.sh`
+Complete server & development automation script for Django + DRF + Docker projects.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djinit`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djinit) my_api_service
+  ```
+- **Attributes / Arguments:**
+  - `[project_name]` *(Optional)*: Name of the Django project (e.g. `core`, `my_api`, `backend`). If omitted, prompts interactively.
+- **What it does automatically:**
+  1. Checks and verifies `python3`, `pip`, and `python3-venv`.
+  2. Creates virtual environment `venv/` and activates it.
+  3. Installs: `Django 5`, `djangorestframework`, `simplejwt`, `cors-headers`, `django-filter`, `drf-spectacular`, `psycopg2-binary`, `python-dateutil`, `pytz`, `whitenoise`, and `gunicorn`.
+  4. Generates `requirements.txt`.
+  5. Initializes project with root `manage.py`.
+  6. Generates `.env` (with cryptographically secure randomized `SECRET_KEY`) and `.env.example`.
+  7. Preconfigures `settings.py` (database connection from `.env`, CORS, Whitenoise, Swagger) and `urls.py` (`/api/docs/`, `/api/token/`).
+  8. Creates `.gitignore` and `.dockerignore`.
+  9. Creates `Dockerfile` (Python 3.12 slim) and `entrypoint.sh` (automatic DB readiness check, migrations, and static collection).
+  10. Generates `docker-compose-dev.yml` (Hot reloading + Postgres + Redis) and `docker-compose-prod.yml` (Gunicorn + Nginx + Postgres + Redis).
+  11. Creates `nginx/nginx.conf`, `./dev.sh`, and `./prod.sh` helpers.
+
+---
+
+#### 2. `djn` (Django CLI Helper)
+Swiss Army Knife for everyday Django operations.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djn`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djn) <command> [args...]
+  ```
+- **Attributes / Commands:**
+  | Command | Arguments | Description |
+  | :--- | :--- | :--- |
+  | `init` | `[name]` | Calls `djinit` to bootstrap full project |
+  | `runserver`, `run` | `[port]` | Starts server (default: `0.0.0.0:8000`) |
+  | `migration`, `mig` | *None* | Runs `makemigrations` followed by `migrate` |
+  | `showmig` | *None* | Displays current status of all migrations |
+  | `resetmig` | *None* | Deletes all migration files & SQLite database (Clean slate) |
+  | `resetall` | *None* | Resets migrations, SQLite DB, and completely recreates `venv` |
+  | `superuser` | *None* | Interactive prompt to create an admin superuser |
+  | `shell` | *None* | Opens interactive Django Python shell |
+  | `app` | `<app_name>` | Creates a new Django app |
+  | `project` | `<name>` | Creates standard Django project |
+  | `static` | *None* | Runs `collectstatic --noinput` |
+  | `check` | *None* | Runs Django system integrity checks |
+  | `test` | `[app]` | Runs Django test suite |
+  | `dumpdata` | `[app] [file]` | Exports database fixtures to JSON |
+  | `loaddata` | `<file.json>` | Imports database fixtures from JSON |
+
+- **Examples:**
+  ```bash
+  # Start server on port 8080:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djn) runserver 8080
+
+  # Clean reset migrations:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djn) resetmig
+  ```
+
+---
+
+#### 3. `envrn` (Virtual Environment Manager)
+CLI manager to create, remove, inspect, and bulk-install package groups into Python `venv`.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) <command>
+  ```
+- **Attributes / Commands:**
+  - `create`: Creates virtual environment in `./venv`.
+  - `activate`: Instructions or subshell with active venv.
+  - `remove`: Deletes `./venv`.
+  - `info`: Displays `pyvenv.cfg` metadata.
+  - `install`: Interactive menu to install curated package groups (Core Django, Dev tools, DRF, Auth, Storage, Production, DB tools).
+  - `list`: Lists installed packages via `pip list`.
+
+---
+
+### ⚡ FastAPI Automation
+
+---
+
+#### 4. `fapi` (FastAPI CLI Helper)
+FastAPI developer assistant for Uvicorn servers and Tortoise-ORM / Aerich migrations.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fapi`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fapi) <command> [args...]
+  ```
+- **Attributes / Commands:**
+  | Command | Arguments | Description |
+  | :--- | :--- | :--- |
+  | `run` | `[port] [app]` | Starts Uvicorn with `--reload` (default: `app.main:app`, port: 8000) |
+  | `prod` | `[port] [app]` | Starts multi-worker production Uvicorn server |
+  | `init-db` | *None* | Initializes Tortoise-ORM database config (`aerich init-db`) |
+  | `migrate`, `mig` | *None* | Generates and applies Aerich migrations (`aerich migrate && upgrade`) |
+  | `upgrade` | *None* | Applies pending migrations (`aerich upgrade`) |
+  | `downgrade` | *None* | Rolls back last migration (`aerich downgrade`) |
+  | `history` | *None* | Displays migration history |
+
+- **Examples:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fapi) run 8000
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fapi) migrate
+  ```
+
+---
+
+#### 5. `fastrun` & `fastmig`
+Convenience shortcuts that delegate directly to `fapi run` and `fapi migrate`.
+
+- **Fastrun One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fastrun)
+  ```
+- **Fastmig One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fastmig)
+  ```
+
+---
+
+### 🐳 Docker & Container Operations
+
+---
+
+#### 6. `dock` (Docker Manager)
+Comprehensive wrapper around Docker CLI and Docker Compose with automatic `sudo` detection.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/dock`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/dock) <command> [args...]
+  ```
+- **Attributes / Commands:**
+  | Command | Arguments | Description |
+  | :--- | :--- | :--- |
+  | `status` | *None* | Shows Docker systemd service status |
+  | `start` / `stop` / `restart` | *None* | Manages Docker system service |
+  | `install` | *None* | Installs Docker CE & Docker Compose on Ubuntu/Debian |
+  | `ps` | *None* | Lists currently running containers |
+  | `psall` | *None* | Lists all containers including stopped |
+  | `run` | `<image> [name]` | Runs container in detached background mode |
+  | `runit` | `<image>` | Runs an interactive temporary container (`--rm -it`) |
+  | `runhost` | `<image> [port_map]`| Runs container with port mapping (default: `8000:8000`) |
+  | `exec` | `<name> [cmd]` | Executes bash/sh or command inside running container |
+  | `logs` | `<name>` | Live log tail of container (`docker logs -f`) |
+  | `stopc` / `startc` / `restartc` | `<name>` | Stops, starts, or restarts container |
+  | `rm` | `<name>` | Force removes a container |
+  | `rmi` | `<image>` | Removes a Docker image |
+  | `images` | *None* | Lists downloaded images |
+  | `build` | `<path> <tag>` | Builds image from Dockerfile (e.g. `dock build . myapp:v1`) |
+  | `pull` / `push` | `<image>` | Pulls from or pushes to Docker Hub |
+  | `stats` | *None* | Displays live CPU and memory metrics for containers |
+  | `prune` | *None* | Cleans up unused containers, networks, and images |
+  | `compose` | `[args...]` | Passes command to Docker Compose (e.g. `dock compose up -d`) |
+  | `cheat` | *None* | Shows complete Docker cheat sheet & troubleshooting |
+
+---
+
+#### 7. `docker_reinstall`
+Installs official Docker CE, Containerd, Docker Buildx, and Compose plugin via official Docker APT repositories, and adds `$USER` to the docker group.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/docker_reinstall`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/docker_reinstall)
+  ```
+
+---
+
+#### 8. `docker_help`
+Complete Docker cheat sheet and troubleshooting guide for common failures (port collisions, exited containers, socket permissions, disk exhaustion).
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/docker_help`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/docker_help)
+  ```
+
+---
+
+### 🐘 Database Administration
+
+---
+
+#### 9. `pgsql` (PostgreSQL Manager)
+Interactive menu-driven PostgreSQL management tool.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/pgsql`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/pgsql)
+  ```
+- **Menu Features:**
+  - `1-5`: Install, check status, start, stop, and restart PostgreSQL service.
+  - `6`: Direct interactive `psql` console as user `postgres`.
+  - `7-8`: List all databases (`\l`) and users (`\du`).
+  - `9-11`: Create database, create user with password, grant privileges.
+  - `12`: Connect to a specific database.
+  - `13-14`: Automated database backup (`pg_dump`) and database restore from `.sql`.
+
+---
+
+### 🐙 Git Automation
+
+---
+
+#### 10. `gitinit`
+Automates Git repository setup with best practices.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitinit`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitinit)
+  ```
+- **What it does:**
+  1. Initializes repository (`git init`).
+  2. Sets default branch to `main` (`git branch -M main`).
+  3. Generates a standard `.gitignore` if missing.
+  4. Stages all files (`git add -A`) and commits initial commit.
+  5. Prompts to link remote repository URL and push to `origin/main`.
+
+---
+
+#### 11. `gitpush`
+Fast, interactive stage, commit, and push utility.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitpush`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitpush)
+  ```
+- **Features:**
+  - Displays working tree status.
+  - Automatically stages modified/new files.
+  - Prompt for commit message (defaults to timestamp: `'Update YYYY-MM-DD HH:MM'`).
+  - Automatically detects current branch with optional branch creation.
+  - Prompts before force-pushing to prevent accidental overwrites.
+
+---
+
+### 🐧 Linux Command Cheat Sheets & Navigator
+
+---
+
+#### 12. `syshelp` (System Navigator)
+Master interactive hub connecting all 9 Linux cheat sheets.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/syshelp`
+- **One-Liner:**
+  ```bash
+  # Interactive Menu:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/syshelp)
+
+  # Direct Topic:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/syshelp) <topic>
+  ```
+- **Supported Topic Shortcuts:**
+  `docker`, `net`, `port`, `ps`, `pkg`, `perm`, `sys`, `user`, `file`
+
+---
+
+#### 13. Individual Cheat Sheet One-Liners
+
+| Topic | Focus | Direct Curl Execution Command |
 | :--- | :--- | :--- |
-| **Django & DRF** | [`djinit`](file:///home/mizan/ShellScript/djinit), [`djn`](file:///home/mizan/ShellScript/djn), [`denv`](file:///home/mizan/ShellScript/denv), [`newmig`](file:///home/mizan/ShellScript/newmig), [`dauto`](file:///home/mizan/ShellScript/dauto) | Full project bootstrapping, venv management, migrations & dev server |
-| **FastAPI** | [`fapi`](file:///home/mizan/ShellScript/fapi), [`fastrun`](file:///home/mizan/ShellScript/fastrun), [`fastmig`](file:///home/mizan/ShellScript/fastmig) | Uvicorn live server & Aerich Tortoise-ORM migration management |
-| **Virtual Environments** | [`envrn`](file:///home/mizan/ShellScript/envrn) | Interactive Python virtual environment creation & package installer |
-| **Docker & Compose** | [`dock`](file:///home/mizan/ShellScript/dock), [`docker_reinstall`](file:///home/mizan/ShellScript/docker_reinstall), [`docker_help`](file:///home/mizan/ShellScript/docker_help) | Container CLI helper, Docker CE installer & troubleshooting cheat sheet |
-| **PostgreSQL** | [`pgsql`](file:///home/mizan/ShellScript/pgsql) | Interactive menu for database creation, users, privileges, backup & restore |
-| **Git Automation** | [`gitinit`](file:///home/mizan/ShellScript/gitinit), [`gitpush`](file:///home/mizan/ShellScript/gitpush) | Zero-friction repo initialization, default branch setup, staging & push |
-| **System Help Hub** | [`syshelp`](file:///home/mizan/ShellScript/syshelp) (and 8 `*_help` tools) | Interactive navigator across all Linux cheat sheets |
-| **System Maintenance** | [`update`](file:///home/mizan/ShellScript/update), [`bsp`](file:///home/mizan/ShellScript/bsp) | One-line APT update/autoremove & permission granting |
-| **Media Utilities** | [`media_dl`](file:///home/mizan/ShellScript/media_dl), [`audio`](file:///home/mizan/ShellScript/audio), [`video`](file:///home/mizan/ShellScript/video) | Unified audio (MP3) and video (MP4) downloader using `yt-dlp` |
+| **`net_help`** | IP, Routing, DNS, Interfaces | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/net_help)` |
+| **`port_help`** | Listening Ports, Sockets, `ss`, `netstat`, `lsof` | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/port_help)` |
+| **`ps_help`** | Processes, Signals, `top`, `htop`, Kill | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ps_help)` |
+| **`systemctl_help`** | Systemd, Unit Services, Logs, Timers | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/systemctl_help)` |
+| **`package_help`** | APT Repos, Package Updates & Cleaning | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/package_help)` |
+| **`permissions_help`** | `chmod`, `chown`, Octal Notation & ACLs | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/permissions_help)` |
+| **`file_help`** | Navigation, Tar/Gzip, Disk Usage, Find | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/file_help)` |
+| **`user_help`** | Users, Groups, Sudoers, Passwords | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/user_help)` |
 
 ---
 
-## 🚀 Quick Start
-
-Ensure scripts have execute permissions:
-```bash
-chmod +x *
-```
-
-### 1. Bootstrap a Complete Django + Docker + DRF Project
-```bash
-./djinit my_api_service
-```
-- Creates `venv/`, installs all dependencies (Django, DRF, JWT, CORS, Postgres, Whitenoise, Gunicorn).
-- Generates `Dockerfile`, `docker-compose-dev.yml`, `docker-compose-prod.yml`, `.env`, and `nginx/nginx.conf`.
-
-### 2. Manage Docker Containers Without Headaches
-```bash
-./dock ps                  # List running containers
-./dock run nginx mynginx   # Start a container
-./dock exec mynginx bash   # Interactive bash shell inside container
-./dock stats               # Live CPU & memory metrics
-```
-
-### 3. PostgreSQL Database Menu
-```bash
-./pgsql
-```
-- Interactive menu to create databases, manage users, backup via `pg_dump`, and restore.
-
-### 4. Linux Command Navigator (`syshelp`)
-```bash
-./syshelp          # Opens full interactive navigation menu
-./syshelp net      # Shows network configuration cheat sheet
-./syshelp port     # Shows port & listening socket cheat sheet
-./syshelp docker   # Shows Docker cheat sheet & troubleshooting
-```
+### 🔄 System Maintenance & Utilities
 
 ---
 
-## 📖 Detailed Tool Guide
+#### 14. `update`
+Automated system maintenance tool. Updates package lists, performs full package upgrade, and cleans up obsolete dependencies and package caches.
 
-### 1. Web Frameworks & Environments
-
-#### `djinit` & `django_setup.sh`
-Complete automation file for server & local Django development:
-- Checks system prerequisites (`python3`, `pip`, `python3-venv`).
-- Creates and activates virtual environment `venv/`.
-- Installs Django 5, DRF, JWT, CORS headers, `python-dateutil`, `pytz`, `psycopg2-binary`, `drf-spectacular`, and `gunicorn`.
-- Generates root `manage.py`, `.env` with a secure randomized `SECRET_KEY`, `.env.example`, `.gitignore`, and `.dockerignore`.
-- Configures `settings.py` for `.env` integration, Whitenoise, and Swagger OpenAPI 3 docs.
-- Configures `urls.py` with `/api/docs/` and `/api/token/` endpoints.
-- Creates `Dockerfile`, `entrypoint.sh`, `docker-compose-dev.yml`, `docker-compose-prod.yml`, and `nginx/nginx.conf`.
-
-#### `djn`
-The everyday Django CLI assistant:
-```bash
-./djn runserver 8000   # Run dev server
-./djn mig              # makemigrations && migrate
-./djn resetmig         # Clean all migration files and reset sqlite database
-./djn resetall         # Reset migrations, db, and rebuild virtual environment
-./djn superuser        # Create admin user
-./djn shell            # Open Django shell
-./djn app <name>       # Create new Django app
-```
-
-#### `fapi`
-FastAPI & Tortoise-ORM Aerich CLI manager:
-```bash
-./fapi run             # Start Uvicorn with auto-reload on port 8000
-./fapi run 8080        # Custom port
-./fapi migrate         # Generate & apply Aerich migrations
-./fapi prod            # Run multi-worker production server
-```
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/update`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/update)
+  ```
 
 ---
 
-### 2. Docker & Container Operations
+#### 15. `bsp`
+Utility to grant executable permissions (`chmod +x`) to one or more files.
 
-#### `dock`
-An intuitive wrapper around Docker and Docker Compose:
-- Auto-detects if the user is in the `docker` group to omit `sudo`.
-- Commands: `status`, `start`, `stop`, `restart`, `ps`, `psall`, `run`, `runit`, `runhost`, `exec`, `logs`, `stopc`, `startc`, `rm`, `rmi`, `images`, `build`, `pull`, `push`, `stats`, `prune`, `compose`, and `cheat`.
-
-#### `docker_reinstall`
-One-command installation of official Docker CE, Containerd, and Docker Compose plugin on Ubuntu/Debian.
-
-#### `docker_help`
-Exhaustive Docker cheat sheet with a troubleshooting guide for common issues (port collisions, exited containers, permission denied, disk exhaustion).
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/bsp`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/bsp) script.sh
+  ```
 
 ---
 
-### 3. Database Management
-
-#### `pgsql`
-Menu-driven PostgreSQL administrative utility:
-- Service management (start, stop, restart, status).
-- User & database creation with permission grants.
-- Database backups (`pg_dump`) with automated timestamp naming.
-- Database restore from `.sql` files.
+### 🎬 Media Download Utilities (yt-dlp)
 
 ---
 
-### 4. Git & Version Control
+#### 16. `media_dl` (Unified Media Downloader)
+Unified media downloader for YouTube and other web platforms.
 
-#### `gitinit`
-Initializes a new Git repository, sets the default branch to `main`, generates a standard `.gitignore`, stages files, and sets up the remote origin.
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl) [options] <URL>
+  ```
+- **Attributes / Options:**
+  - `-a`, `--audio`: Downloads highest-quality audio converted to MP3.
+  - `-v`, `--video`: Downloads MP4 video (prompts for resolution: 360p - 2K).
+  - `-b`, `--best`: Downloads best video+audio without prompting.
+  - `-o`, `--output <DIR>`: Sets output directory (default: `~/Downloads`).
+- **Examples:**
+  ```bash
+  # Download MP3 audio:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl) -a "https://www.youtube.com/watch?v=xxxx"
 
-#### `gitpush`
-Interactive Git workflow:
-- Displays working tree status.
-- Stages changes (`git add -A`) with automated commit message fallback.
-- Auto-detects active branch with optional branch creation.
-- Safe push with confirmation before force-pushing.
+  # Download best quality video:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl) -b "https://www.youtube.com/watch?v=xxxx"
+  ```
 
 ---
 
-### 5. System Administration & Helper Hub
+#### 17. `audio`
+Dedicated YouTube MP3 audio extractor (320 kbps).
 
-#### `syshelp`
-Centralized navigator providing instant access to all 9 system cheat sheets:
-- `docker_help`: Docker commands & fixes
-- `file_help`: File and directory navigation, compression, and searches
-- `net_help`: Network interfaces, IP addresses, DNS, and connectivity
-- `port_help`: Socket listening status (`ss`, `netstat`, `lsof`, `fuser`)
-- `ps_help`: Process monitoring, signals, `top`, `htop`, `kill`
-- `package_help`: APT updates, upgrades, package searches, and repository management
-- `permissions_help`: `chmod`, `chown`, octal permissions, and ACLs
-- `systemctl_help`: Systemd services, daemon reload, failed services, and logs
-- `user_help`: User accounts, groups, `sudoers`, and passwd management
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/audio`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/audio) "https://www.youtube.com/watch?v=xxxx"
+  ```
 
-#### `update`
-Single-command system maintenance:
+---
+
+#### 18. `video`
+Dedicated YouTube MP4 video downloader with interactive resolution picker.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video`
+- **One-Liner:**
+  ```bash
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "https://www.youtube.com/watch?v=xxxx"
+  ```
+
+---
+
+## 💻 Optional: Install All Commands Globally on Any Server
+
+To install all commands globally to `/usr/local/bin` so you can type `djinit`, `dock`, `djn`, `fapi`, `syshelp`, `pgsql` directly anywhere:
+
 ```bash
-./update
+sudo git clone https://github.com/mizan92782/CLI-Script.git /opt/cli-script && \
+sudo chmod +x /opt/cli-script/* && \
+for script in /opt/cli-script/*; do
+  [ -f "$script" ] && sudo ln -sf "$script" /usr/local/bin/"$(basename "$script")"
+done
 ```
-Performs `apt update`, `apt upgrade -y`, and `apt autoremove -y`.
-
-#### `bsp`
-Quick utility to grant executable permissions to one or more scripts:
-```bash
-./bsp script_name.sh
-./bsp *.sh
-```
-
----
-
-### 6. Media Utilities
-
-#### `media_dl`
-Unified media downloader for YouTube and web video platforms via `yt-dlp`:
-```bash
-./media_dl -a <URL>   # Download as MP3 (320kbps audio)
-./media_dl -v <URL>   # Download as MP4 with quality selection (360p - 2K)
-./media_dl -b <URL>   # Download best available quality directly
-```
-Individual standalone scripts [`audio`](file:///home/mizan/ShellScript/audio) and [`video`](file:///home/mizan/ShellScript/video) are also available.
 
 ---
 
 ## 📄 License
 
-Open-source and available under the [MIT License](https://opensource.org/licenses/MIT).
+Open-source and released under the [MIT License](https://opensource.org/licenses/MIT).
