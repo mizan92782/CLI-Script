@@ -105,6 +105,7 @@ if [[ "$QUALITY" == "best" || "$QUALITY" == "6" ]]; then
     echo "🎬 Downloading best available quality to $OUT_DIR..."
     yt-dlp \
         --no-playlist \
+        --extractor-args "youtube:player_client=android,web" \
         -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" \
         --merge-output-format mp4 \
         -o "$OUT_DIR/%(title)s.%(ext)s" \
@@ -115,7 +116,19 @@ else
     echo "🎬 Downloading ${HEIGHT}p video to $OUT_DIR..."
     yt-dlp \
         --no-playlist \
+        --extractor-args "youtube:player_client=android,web" \
         -f "bestvideo[height<=${HEIGHT}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${HEIGHT}]+bestaudio/best[height<=${HEIGHT}]/best" \
+        --merge-output-format mp4 \
+        -o "$OUT_DIR/%(title)s.%(ext)s" \
+        "$URL"
+fi
+
+if [ $? -ne 0 ]; then
+    echo "⚠️ Retrying with mobile client fallback..."
+    yt-dlp \
+        --no-playlist \
+        --extractor-args "youtube:player_client=android" \
+        -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best" \
         --merge-output-format mp4 \
         -o "$OUT_DIR/%(title)s.%(ext)s" \
         "$URL"
@@ -124,6 +137,7 @@ fi
 if [ $? -eq 0 ]; then
     echo "✔ Video download complete! Saved to $OUT_DIR"
 else
-    echo "❌ Video download failed. Please check the URL or network connection."
+    echo "❌ Video download failed."
+    echo "💡 Tip: Update yt-dlp to latest version: pip install -U --break-system-packages yt-dlp"
     exit 1
 fi

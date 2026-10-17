@@ -62,7 +62,9 @@ OUT_DIR="${2:-$HOME/Downloads}"
 mkdir -p "$OUT_DIR"
 
 echo "🎵 Downloading highest-quality audio (MP3 320kbps) to $OUT_DIR..."
+# Use android,web client to avoid YouTube HTTP 403 Forbidden on outdated clients
 yt-dlp --no-playlist \
+    --extractor-args "youtube:player_client=android,web" \
     -f "bestaudio/best" \
     -x \
     --audio-format mp3 \
@@ -70,9 +72,22 @@ yt-dlp --no-playlist \
     -o "$OUT_DIR/%(title)s.%(ext)s" \
     "$URL"
 
+if [ $? -ne 0 ]; then
+    echo "⚠️ Retrying with mobile client fallback..."
+    yt-dlp --no-playlist \
+        --extractor-args "youtube:player_client=android" \
+        -f "bestaudio/best" \
+        -x \
+        --audio-format mp3 \
+        --audio-quality 0 \
+        -o "$OUT_DIR/%(title)s.%(ext)s" \
+        "$URL"
+fi
+
 if [ $? -eq 0 ]; then
     echo "✔ Audio download complete! Saved to $OUT_DIR"
 else
-    echo "❌ Audio download failed. Please check the URL or network connection."
+    echo "❌ Audio download failed."
+    echo "💡 Tip: Update yt-dlp to latest version: pip install -U --break-system-packages yt-dlp"
     exit 1
 fi
