@@ -1,2 +1,105 @@
 #!/bin/bash
 
+# ==============================================================================
+# FastAPI & Tortoise-ORM / Aerich CLI Helper (fapi)
+# ==============================================================================
+
+# Detect active or local Python/Uvicorn environment
+if [ -d "venv" ] && [ -f "venv/bin/uvicorn" ]; then
+    UVICORN="venv/bin/uvicorn"
+    AERICH="venv/bin/aerich"
+else
+    UVICORN="uvicorn"
+    AERICH="aerich"
+fi
+
+show_help() {
+    echo ""
+    echo "==================================================="
+    echo "            ⚡ FASTAPI CLI HELPER (fapi)           "
+    echo "==================================================="
+    echo "Usage: fapi [command] [args...]"
+    echo ""
+    echo "Server Management:"
+    echo "  run [port] [app]      Start Uvicorn dev server (default: app.main:app, port 8000)"
+    echo "  prod [port] [app]     Start production Uvicorn with multiple workers"
+    echo ""
+    echo "Database & Aerich Migrations:"
+    echo "  init-db               Initialize Tortoise-ORM database (aerich init-db)"
+    echo "  migrate, mig          Generate and apply migrations (aerich migrate & upgrade)"
+    echo "  upgrade               Apply pending migrations (aerich upgrade)"
+    echo "  downgrade             Rollback last migration (aerich downgrade)"
+    echo "  history               Show migration history (aerich history)"
+    echo ""
+    echo "General:"
+    echo "  --help, -h            Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  fapi run"
+    echo "  fapi run 8080"
+    echo "  fapi migrate"
+    echo "==================================================="
+    echo ""
+}
+
+if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
+    show_help
+    exit 0
+fi
+
+cmd="$1"
+arg2="$2"
+arg3="$3"
+shift
+
+case "$cmd" in
+    run)
+        PORT="${arg2:-8000}"
+        APP_MODULE="${arg3:-app.main:app}"
+        echo "Starting FastAPI server on http://127.0.0.1:$PORT ($APP_MODULE)..."
+        $UVICORN "$APP_MODULE" --reload --host 0.0.0.0 --port "$PORT" "$@"
+        ;;
+
+    prod)
+        PORT="${arg2:-8000}"
+        APP_MODULE="${arg3:-app.main:app}"
+        WORKERS=$(nproc 2>/dev/null || echo 4)
+        echo "Starting production FastAPI server with $WORKERS workers on port $PORT..."
+        $UVICORN "$APP_MODULE" --host 0.0.0.0 --port "$PORT" --workers "$WORKERS" "$@"
+        ;;
+
+    init-db)
+        echo "Initializing Aerich database..."
+        $AERICH init-db
+        ;;
+
+    migrate|mig)
+        echo "Generating Aerich migrations..."
+        $AERICH migrate
+        echo "Applying migrations..."
+        $AERICH upgrade
+        ;;
+
+    upgrade)
+        echo "Applying migrations (aerich upgrade)..."
+        $AERICH upgrade
+        ;;
+
+    downgrade)
+        echo "Rolling back migration (aerich downgrade)..."
+        $AERICH downgrade
+        ;;
+
+    history)
+        $AERICH history
+        ;;
+
+    help)
+        show_help
+        ;;
+
+    *)
+        echo "Unknown command: '$cmd'. Use --help for available options."
+        exit 1
+        ;;
+esac

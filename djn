@@ -1,113 +1,170 @@
 #!/bin/bash
+
+# ==============================================================================
+# Django CLI Helper (djn)
+# Comprehensive Swiss Army Knife for Django & DRF Development
+# ==============================================================================
+
+# Detect active or local Python environment
+if [ -d "venv" ] && [ -f "venv/bin/python" ]; then
+    PYTHON="venv/bin/python"
+elif [ -n "$VIRTUAL_ENV" ]; then
+    PYTHON="python"
+else
+    PYTHON="python3"
+fi
+
 show_help() {
     echo ""
-    echo "================ Django CLI Helper ================"
-    echo "Usage: djn [command] [name]"
+    echo "==================================================="
+    echo "             🚀 DJANGO CLI HELPER (djn)            "
+    echo "==================================================="
+    echo "Usage: djn [command] [args...]"
     echo ""
-    echo "Available Commands:"
-    echo "  env                   Activate virtual environment"
-    echo "                        Command: source venv/bin/activate"
-    echo ""
+    echo "Project & Environment:"
+    echo "  init [name]           Full production setup (calls djinit)"
+    echo "  env, activate         Activate virtual environment (source venv/bin/activate)"
     echo "  project [name]        Create a new Django project"
-    echo "                        Command: django-admin startproject [name]"
+    echo "  app [name]            Create a new Django app inside project"
     echo ""
-    echo "  app [name]            Create a new Django app"
-    echo "                        Command: python manage.py startapp [name]"
+    echo "Database & Migrations:"
+    echo "  migration, mig        Run makemigrations & migrate"
+    echo "  showmig               Show migration status for all apps"
+    echo "  resetmig              Reset migrations & delete db.sqlite3 (clean slate)"
+    echo "  resetall              Reset migrations, db.sqlite3 & recreate venv"
+    echo "  dumpdata [app]        Export data fixtures to JSON"
+    echo "  loaddata [file]       Import data fixtures from JSON"
     echo ""
-    echo "  migration             Run makemigrations & migrate"
-    echo "                        Command: python manage.py makemigrations && python manage.py migrate"
-    echo ""
-    echo "  runserver             Start Django development server"
-    echo "                        Command: python manage.py runserver"
-    echo ""
-    echo "  superuser             Create Django superuser"
-    echo "                        Command: python manage.py createsuperuser"
-    echo ""
+    echo "Server & Management:"
+    echo "  runserver [port]      Start development server (default port: 8000)"
+    echo "  superuser             Create a new Django superuser"
+    echo "  shell                 Open Django interactive shell"
     echo "  static                Collect static files"
-    echo "                        Command: python manage.py collectstatic"
+    echo "  check                 Run Django system integrity check"
+    echo "  test [app]            Run tests"
+    echo "  rs [script_name]      Run custom Django script (via django-extensions)"
+    echo "  --help, -h            Show this help message"
     echo ""
-    echo "  showmig               Show migrations"
-    echo "                        Command: python manage.py showmigrations"
-    echo ""
-    echo "  shell                 Open Django shell"
-    echo "                        Command: python manage.py shell"
-    echo ""
-    echo "  rs [script_name]      Run custom Django script"
-    echo "                        Command: python manage.py runscript [script_name]"
-    echo ""
-    echo "  help [command]        Show detailed help for a command"
-    echo "                        Command: djn help [command]"
-    echo ""
-    echo "  --help                Show this help message"
-    echo ""
+    echo "Examples:"
+    echo "  djn runserver 8080"
+    echo "  djn migration"
+    echo "  djn resetmig"
+    echo "  djn app authentication"
     echo "==================================================="
     echo ""
 }
 
-
-
-#show main help menu
-if [[ $1 == "--help" || $1 == "-h" ]]; then
+# Show help if requested or no argument passed
+if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     show_help
     exit 0
 fi
 
-
-
-
-
-# Ensure at least one argument exists
-if [ -z "$1" ]; then
-    echo "Error: No command provided. Use --help for usage information."
-    exit 1
-fi
-
-
-
-
 option=$1
 arg2=$2
-
-# Use python from venv if active
-PYTHON=python3
-
-
-
+arg3=$3
+shift
 
 case $option in
+    init)
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -f "$SCRIPT_DIR/djinit" ]; then
+            bash "$SCRIPT_DIR/djinit" "$arg2"
+        else
+            echo "Error: djinit not found in $SCRIPT_DIR"
+            exit 1
+        fi
+        ;;
 
-  
+    env|activate)
+        if [ -d "venv" ]; then
+            echo "To activate virtual environment in your current shell, run:"
+            echo "  source venv/bin/activate"
+            echo ""
+            echo "Spawning a subshell with active venv (type 'exit' to return)..."
+            bash --rcfile <(echo "source venv/bin/activate")
+        else
+            echo "Virtual environment 'venv' not found. Run 'djinit' or 'python3 -m venv venv' first."
+            exit 1
+        fi
+        ;;
+
     project)
         if [ -z "$arg2" ]; then
             echo "Error: Project name required!"
+            echo "Usage: djn project [project_name]"
             exit 1
         fi
         echo "Creating Django project '$arg2'..."
         $PYTHON -m django startproject "$arg2"
-        cd "$arg2" || exit
-        echo "Project '$arg2' created! ================================="
+        echo "Project '$arg2' created successfully! ================================="
         ;;
 
     app)
         if [ -z "$arg2" ]; then
             echo "Error: App name required!"
+            echo "Usage: djn app [app_name]"
             exit 1
         fi
         echo "Creating Django app '$arg2'..."
         $PYTHON manage.py startapp "$arg2"
-        echo "App '$arg2' created! ======================================="
+        echo "App '$arg2' created successfully! ======================================="
         ;;
 
-    migration)
+    migration|mig)
         echo "Running makemigrations ======================================"
         $PYTHON manage.py makemigrations
-        echo "Running migrate..."
+        echo "Running migrate ============================================="
         $PYTHON manage.py migrate
         ;;
 
-    runserver)
-        echo "Starting Django development server ==========================="
-        $PYTHON manage.py runserver
+    showmig)
+        echo "Showing migrations status ===================================="
+        $PYTHON manage.py showmigrations
+        ;;
+
+    resetmig)
+        echo "⚠️  Resetting all migrations and SQLite database..."
+        read -p "Are you sure you want to delete all migration files & db.sqlite3? [y/N]: " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+            find . -path "*/migrations/*.pyc" -delete
+            find . -path "*/migrations/__pycache__" -delete 2>/dev/null || true
+            rm -f db.sqlite3 db.sqlite3-journal
+            echo "✔ Migrations and db.sqlite3 cleaned successfully!"
+        else
+            echo "Action cancelled."
+        fi
+        ;;
+
+    resetall)
+        echo "⚠️  Resetting all migrations, SQLite database, and recreating virtual environment..."
+        read -p "Are you sure? This will delete venv and db.sqlite3! [y/N]: " confirm
+        if [[ "$confirm" =~ ^[Yy]$ ]]; then
+            find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+            find . -path "*/migrations/*.pyc" -delete
+            find . -path "*/migrations/__pycache__" -delete 2>/dev/null || true
+            rm -f db.sqlite3 db.sqlite3-journal
+            rm -rf venv
+            echo "Recreating venv..."
+            python3 -m venv venv
+            # shellcheck disable=SC1091
+            source venv/bin/activate
+            pip install --upgrade pip
+            if [ -f "requirements.txt" ]; then
+                echo "Installing packages from requirements.txt..."
+                pip install -r requirements.txt
+            fi
+            echo "✔ Full reset complete. Run 'source venv/bin/activate' to use."
+        else
+            echo "Action cancelled."
+        fi
+        ;;
+
+    runserver|run)
+        PORT="${arg2:-8000}"
+        echo "Starting Django development server on port $PORT ==========================="
+        $PYTHON manage.py runserver "0.0.0.0:$PORT"
         ;;
 
     superuser)
@@ -117,12 +174,7 @@ case $option in
 
     static)
         echo "Collecting static files ======================================"
-        $PYTHON manage.py collectstatic
-        ;;
-
-    showmig)
-        echo "Showing migrations ==========================================="
-        $PYTHON manage.py showmigrations
+        $PYTHON manage.py collectstatic --noinput
         ;;
 
     shell)
@@ -130,19 +182,51 @@ case $option in
         $PYTHON manage.py shell
         ;;
 
+    check)
+        echo "Running system check ========================================="
+        $PYTHON manage.py check
+        ;;
+
+    test)
+        echo "Running tests ================================================"
+        $PYTHON manage.py test "$arg2"
+        ;;
+
+    dumpdata)
+        OUTPUT_FILE="${arg3:-fixtures.json}"
+        echo "Dumping data fixtures to $OUTPUT_FILE..."
+        $PYTHON manage.py dumpdata --indent 4 "$arg2" > "$OUTPUT_FILE"
+        echo "Data dumped to $OUTPUT_FILE."
+        ;;
+
+    loaddata)
+        if [ -z "$arg2" ]; then
+            echo "Error: Fixture file required!"
+            echo "Usage: djn loaddata [file.json]"
+            exit 1
+        fi
+        echo "Loading fixture $arg2..."
+        $PYTHON manage.py loaddata "$arg2"
+        ;;
+
     rs)
         if [ -z "$arg2" ]; then
             echo "Error: Script name required!"
+            echo "Usage: djn rs [script_name]"
             exit 1
         fi
         echo "Running Django custom script: $arg2 =========================="
         $PYTHON manage.py runscript "$arg2"
         ;;
 
+    help)
+        show_help
+        ;;
+
     *)
-        echo "Invalid command! Use --help for available options."
+        echo "Invalid command '$option'! Use --help for available options."
+        exit 1
         ;;
 esac
 
 exit 0
-

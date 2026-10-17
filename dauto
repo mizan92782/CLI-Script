@@ -1,21 +1,19 @@
-
 #!/bin/bash
-find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
-find . -path "*/migrations/*.pyc" -delete
-rm db.sqlite3
-
-deactivate
-
-rm -rf venv
-
-echo "creating env "
-envrn create
-
-
-
-
-
-
-
-
-
+# Reset Django migrations, database, and recreate virtual environment
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$SCRIPT_DIR/djn" ]; then
+    "$SCRIPT_DIR/djn" resetall "$@"
+else
+    find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+    find . -path "*/migrations/*.pyc" -delete
+    find . -path "*/migrations/__pycache__" -delete 2>/dev/null || true
+    rm -f db.sqlite3 db.sqlite3-journal
+    rm -rf venv
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install --upgrade pip
+    if [ -f "requirements.txt" ]; then
+        pip install -r requirements.txt
+    fi
+    echo "✔ Clean reset and venv recreation complete."
+fi

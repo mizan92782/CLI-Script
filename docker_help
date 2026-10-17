@@ -189,6 +189,36 @@ docker system prune -a
 
 ------------------------------------------------------------
 
+🔹 COMMON ISSUES & TROUBLESHOOTING
+------------------------------------------------------------
+
+❌ Port already in use:
+  sudo lsof -i :<PORT>
+  docker stop <CONTAINER_ID>
+
+❌ Container exits immediately:
+  docker logs <CONTAINER_ID>
+  docker exec -it <CONTAINER_ID> sh
+
+❌ Permission denied (Docker daemon socket):
+  sudo usermod -aG docker $USER
+  newgrp docker
+
+❌ Disk full from old Docker data:
+  docker system prune -af
+  docker volume prune -f
+
+❌ Compose changes not reflected:
+  docker compose down
+  docker compose build --no-cache
+  docker compose up -d
+
+❌ Cannot connect to service:
+  docker compose ps
+  docker compose logs <SERVICE_NAME>
+
+------------------------------------------------------------
+
 🔹 QUICK TIPS
 ------------------------------------------------------------
 
@@ -198,6 +228,7 @@ docker system prune -a
 ✔ Use volumes for persistent data  
 ✔ Tag & push images to Docker Hub with `docker tag` + `docker push`  
 ✔ `docker system prune -a` → clean everything not in use  
+✔ Use `.dockerignore` to keep image builds fast and minimal  
 
 ===============================================================
 

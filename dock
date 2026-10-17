@@ -1,172 +1,286 @@
 #!/bin/bash
 
+# ==============================================================================
+# Docker CLI Helper & Management Tool
+# ==============================================================================
+
+# Determine whether to use sudo or direct docker command
+if groups "$USER" 2>/dev/null | grep -q '\bdocker\b'; then
+    DOCKER_CMD="docker"
+    COMPOSE_CMD="docker compose"
+else
+    DOCKER_CMD="sudo docker"
+    COMPOSE_CMD="sudo docker compose"
+fi
+
 show_help() {
     echo ""
-    echo "================ Docker CLI Helper ================"
-    echo "install  : sudo apt install docker.io -y"
-    echo "run without sudo : sudo usermod -aG docker $USER"
-    echo "check user in docker group: getent group docker"
-    echo "refresh group permissin : newgrp docker"
+    echo "==================================================="
+    echo "             🐳 DOCKER CLI HELPER                  "
+    echo "==================================================="
+    echo "Usage: dock [command] [options]"
     echo ""
-    echo "================ image============="
-    echo "image build  : docker build -t <docker_file_name>"
-    echo ""
-    echo "================ run ===================="
-    echo "docker run : docker run <image name>"
-    
-    echo "Usage: doc [command] [options]"
-    echo ""
-    echo "Available Commands:"
-    echo "  status                Show Docker service status"
+    echo "Service Management:"
+    echo "  status                Show Docker systemd service status"
     echo "  start                 Start Docker service"
     echo "  stop                  Stop Docker service"
     echo "  restart               Restart Docker service"
+    echo "  install               Install Docker CE & Docker Compose"
+    echo ""
+    echo "Container Operations:"
     echo "  ps                    List running containers"
     echo "  psall                 List all containers (including stopped)"
-    echo "  run [image] [name]    Run a container from an image"
-    echo "  exec [name] [cmd]     Execute command inside container"
-    echo "  logs [name]           Show container logs"
+    echo "  run [image] [name]    Run a container in detached mode"
+    echo "  runit [image]         Run an interactive container"
+    echo "  runhost [image] [p]   Run container with port mapping (default: 8000:8000)"
+    echo "  exec [name] [cmd]     Execute command inside container (default: bash/sh)"
+    echo "  logs [name]           Stream logs from a container"
     echo "  stopc [name]          Stop a running container"
     echo "  startc [name]         Start a stopped container"
-    echo "  rm [name]             Remove a container"
-    echo "  rmi [image]           Remove an image"
-    echo "  images                List all images"
+    echo "  restartc [name]       Restart a specific container"
+    echo "  rm [name]             Force remove a container"
+    echo "  stats                 Show live CPU & Memory usage stats"
+    echo ""
+    echo "Image Operations:"
+    echo "  images                List all downloaded images"
     echo "  build [path] [tag]    Build an image from Dockerfile"
     echo "  pull [image]          Pull image from Docker Hub"
     echo "  push [image]          Push image to Docker Hub"
+    echo "  rmi [image]           Remove an image"
     echo "  prune                 Remove all unused containers, images, and networks"
-    echo "  --help                Show this help message"
+    echo ""
+    echo "Compose & Reference:"
+    echo "  compose [args...]     Run docker compose command"
+    echo "  cheat                 Show comprehensive Docker cheat sheet & fixes"
+    echo "  --help, -h            Show this help message"
     echo ""
     echo "Examples:"
-    echo "  doc status"
-    echo "  dic run nginx mynginx"
-    echo "  doc exec mynginx bash"
-    echo "  doc build . myapp:latest"
+    echo "  dock status"
+    echo "  dock run nginx mynginx"
+    echo "  dock exec mynginx bash"
+    echo "  dock logs mynginx"
+    echo "  dock build . myapp:v1"
+    echo "  dock compose up -d"
     echo "==================================================="
     echo ""
 }
 
-# Show help if requested
-if [[ $1 == "--help" || $1 == "-h" ]]; then
+# Show help if requested or no arguments passed
+if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     show_help
     exit 0
 fi
 
-# Check if at least one argument was provided
-if [ -z "$1" ]; then
-    echo "Error: No command provided. Use --help for usage information."
-    exit 1
-fi
-
-# Store the first and second argument
 option=$1
 arg2=$2
 arg3=$3
+shift
 
 case $option in
     status)
         echo "Checking Docker service status..."
-        sudo systemctl status docker
+        sudo systemctl status docker --no-pager
         ;;
-    
+
     start)
         echo "Starting Docker service..."
-        sudo systemctl start docker
+        sudo systemctl start docker && echo "Docker started."
         ;;
-    
+
     stop)
         echo "Stopping Docker service..."
-        sudo systemctl stop docker
+        sudo systemctl stop docker && echo "Docker stopped."
         ;;
-    
+
     restart)
         echo "Restarting Docker service..."
-        sudo systemctl restart docker
+        sudo systemctl restart docker && echo "Docker restarted."
         ;;
-    
+
+    install)
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -f "$SCRIPT_DIR/docker_reinstall" ]; then
+            bash "$SCRIPT_DIR/docker_reinstall"
+        else
+            echo "Installing Docker via apt..."
+            sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2
+            sudo usermod -aG docker "$USER"
+            echo "Installed. Run 'newgrp docker' or log out and back in to use without sudo."
+        fi
+        ;;
+
     ps)
         echo "Listing running containers..."
-        sudo docker ps
+        $DOCKER_CMD ps
         ;;
-    
+
     psall)
-        echo "Listing all containers..."
-        sudo docker ps -a
+        echo "Listing all containers (including stopped)..."
+        $DOCKER_CMD ps -a
         ;;
-    
+
     run)
-       
-        sudo docker run "$arg2" 
+        if [ -z "$arg2" ]; then
+            echo "Error: Image name required!"
+            echo "Usage: dock run [image] [optional_container_name]"
+            exit 1
+        fi
+        if [ -n "$arg3" ]; then
+            echo "Running container '$arg3' from image '$arg2' in background..."
+            $DOCKER_CMD run -d --name "$arg3" "$arg2"
+        else
+            echo "Running container from image '$arg2' in background..."
+            $DOCKER_CMD run -d "$arg2"
+        fi
         ;;
-        
-   runit)
-       
-        sudo docker run -it "$arg2" 
+
+    runit)
+        if [ -z "$arg2" ]; then
+            echo "Error: Image name required!"
+            echo "Usage: dock runit [image]"
+            exit 1
+        fi
+        echo "Running interactive container from image '$arg2'..."
+        $DOCKER_CMD run -it --rm "$arg2" sh -c "bash || sh"
         ;;
-  runhost)
-       
-        sudo docker run -p 8000:8000 "$arg2"
+
+    runhost)
+        if [ -z "$arg2" ]; then
+            echo "Error: Image name required!"
+            echo "Usage: dock runhost [image] [port_mapping (default: 8000:8000)]"
+            exit 1
+        fi
+        PORT_MAP="${arg3:-8000:8000}"
+        echo "Running container on port $PORT_MAP..."
+        $DOCKER_CMD run -p "$PORT_MAP" "$arg2"
         ;;
-        
+
+    exec)
+        if [ -z "$arg2" ]; then
+            echo "Error: Container name required!"
+            echo "Usage: dock exec [container_name] [optional_command]"
+            exit 1
+        fi
+        CMD="${arg3:-bash}"
+        echo "Executing '$CMD' in container '$arg2'..."
+        $DOCKER_CMD exec -it "$arg2" sh -c "$CMD || sh"
+        ;;
 
     logs)
-        sudo docker logs -f "$arg2"
+        if [ -z "$arg2" ]; then
+            echo "Error: Container name required!"
+            echo "Usage: dock logs [container_name]"
+            exit 1
+        fi
+        echo "Streaming logs for container '$arg2' (Ctrl+C to stop)..."
+        $DOCKER_CMD logs -f "$arg2"
         ;;
-    
+
     stopc)
+        if [ -z "$arg2" ]; then
+            echo "Error: Container name required!"
+            exit 1
+        fi
         echo "Stopping container '$arg2'..."
-        sudo ocker stop "$arg2"
+        $DOCKER_CMD stop "$arg2"
         ;;
-    
+
     startc)
+        if [ -z "$arg2" ]; then
+            echo "Error: Container name required!"
+            exit 1
+        fi
         echo "Starting container '$arg2'..."
-        sudo docker start "$arg2"
+        $DOCKER_CMD start "$arg2"
         ;;
-    
+
+    restartc)
+        if [ -z "$arg2" ]; then
+            echo "Error: Container name required!"
+            exit 1
+        fi
+        echo "Restarting container '$arg2'..."
+        $DOCKER_CMD restart "$arg2"
+        ;;
+
     rm)
-        echo "Removing container '$arg2'..."
-        sudo docker rm -f "$arg2"
+        if [ -z "$arg2" ]; then
+            echo "Error: Container name required!"
+            exit 1
+        fi
+        echo "Force removing container '$arg2'..."
+        $DOCKER_CMD rm -f "$arg2"
         ;;
-    
+
     rmi)
+        if [ -z "$arg2" ]; then
+            echo "Error: Image name or ID required!"
+            exit 1
+        fi
         echo "Removing image '$arg2'..."
-        sudo docker rmi "$arg2"
+        $DOCKER_CMD rmi "$arg2"
         ;;
-    
+
     images)
         echo "Listing all Docker images..."
-        sudo docker images
+        $DOCKER_CMD images
         ;;
-    
+
     build)
         if [ -z "$arg2" ] || [ -z "$arg3" ]; then
             echo "Error: Please provide a build path and tag name."
-            echo "Usage: doc build [path] [tag]"
+            echo "Usage: dock build [path] [tag]"
             exit 1
         fi
         echo "Building image '$arg3' from path '$arg2'..."
-        sudo docker build -t "$arg3" "$arg2"
+        $DOCKER_CMD build -t "$arg3" "$arg2"
         ;;
-    
+
     pull)
+        if [ -z "$arg2" ]; then
+            echo "Error: Image name required!"
+            exit 1
+        fi
         echo "Pulling image '$arg2'..."
-        sudo docker pull "$arg2"
+        $DOCKER_CMD pull "$arg2"
         ;;
-    
+
     push)
+        if [ -z "$arg2" ]; then
+            echo "Error: Image name required!"
+            exit 1
+        fi
         echo "Pushing image '$arg2'..."
-        sudo docker push "$arg2"
+        $DOCKER_CMD push "$arg2"
         ;;
-    
+
+    stats)
+        echo "Showing live container resource statistics..."
+        $DOCKER_CMD stats
+        ;;
+
     prune)
-        echo "Cleaning up unused Docker data..."
-        sudo docker system prune -af
+        echo "Cleaning up unused Docker containers, images, and networks..."
+        $DOCKER_CMD system prune -af
         ;;
-    
+
+    compose)
+        $COMPOSE_CMD "$@"
+        ;;
+
+    cheat|help)
+        SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+        if [ -f "$SCRIPT_DIR/docker_help" ]; then
+            bash "$SCRIPT_DIR/docker_help"
+        else
+            show_help
+        fi
+        ;;
+
     *)
-        echo "Invalid command! Use --help for available options."
+        echo "Invalid command '$option'! Use --help for available options."
+        exit 1
         ;;
 esac
 
 exit 0
-

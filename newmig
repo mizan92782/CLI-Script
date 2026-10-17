@@ -1,7 +1,12 @@
 #!/bin/bash
-
-
-find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
-find . -path "*/migrations/__pycache__" -delete
-rm db.sqlite3
-
+# Reset Django migrations and SQLite database (Clean Slate)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$SCRIPT_DIR/djn" ]; then
+    "$SCRIPT_DIR/djn" resetmig "$@"
+else
+    find . -path "*/migrations/*.py" -not -name "__init__.py" -delete
+    find . -path "*/migrations/*.pyc" -delete
+    find . -path "*/migrations/__pycache__" -delete 2>/dev/null || true
+    rm -f db.sqlite3 db.sqlite3-journal
+    echo "✔ Django migrations and SQLite database cleaned."
+fi

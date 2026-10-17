@@ -1,5 +1,8 @@
-
 #!/bin/bash
-source venv/bin/activate
-
-
+# Activates virtual environment in current directory
+if [ -f "venv/bin/activate" ]; then
+    source venv/bin/activate
+    echo "✔ Virtual environment activated: $VIRTUAL_ENV"
+else
+    echo "❌ No 'venv' found in $(pwd). Run './djinit' or 'python3 -m venv venv' first."
+fi
