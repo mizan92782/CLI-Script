@@ -1,65 +1,129 @@
 #!/bin/bash
 
 # ==============================================================================
-# YouTube Video Downloader (MP4 with Quality Selection)
+# YouTube & Web Video Downloader (MP4 with Quality Selection)
 # ==============================================================================
 
-if [ -z "$1" ]; then
-    echo "Usage: ./video <YouTube-URL> [output_directory]"
-    echo "Example: ./video https://www.youtube.com/watch?v=xxxx"
-    exit 1
+show_help() {
+    echo "==================================================="
+    echo "           🎬 VIDEO DOWNLOADER (MP4)               "
+    echo "==================================================="
+    echo "Usage: ./video <URL> [quality] [output_directory]"
+    echo ""
+    echo "Arguments:"
+    echo "  <URL>             YouTube or supported web video URL (Required)"
+    echo "  [quality]         Optional: 360, 480, 720, 1080, 1440, best (Default: interactive prompt)"
+    echo "  [output_dir]      Optional: Destination directory (Default: ~/Downloads)"
+    echo ""
+    echo "Examples:"
+    echo "  ./video https://www.youtube.com/watch?v=xxxx"
+    echo "  ./video https://www.youtube.com/watch?v=xxxx 1080"
+    echo "  ./video https://www.youtube.com/watch?v=xxxx best /path/to/folder"
+    echo "==================================================="
+}
+
+if [ -z "$1" ] || [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    show_help
+    exit 0
 fi
 
-# Check yt-dlp
+# Ensure yt-dlp is installed
 if ! command -v yt-dlp &> /dev/null; then
     echo "❌ yt-dlp is not installed!"
-    echo "Install via: sudo apt install -y yt-dlp  OR  pip install yt-dlp"
-    exit 1
+    if command -v apt-get &> /dev/null && [ "$EUID" -eq 0 ]; then
+        apt-get update && apt-get install -y yt-dlp ffmpeg
+    elif command -v sudo &> /dev/null; then
+        read -p "Install yt-dlp & ffmpeg now via sudo apt? [Y/n]: " install_ytdlp < /dev/tty
+        if [[ "$install_ytdlp" =~ ^[Yy]$ || -z "$install_ytdlp" ]]; then
+            sudo apt-get update && sudo apt-get install -y yt-dlp ffmpeg
+        else
+            echo "Please install manually: sudo apt install -y yt-dlp ffmpeg"
+            exit 1
+        fi
+    else
+        echo "Install via: sudo apt install -y yt-dlp ffmpeg  OR  pip install yt-dlp"
+        exit 1
+    fi
+fi
+
+# Ensure ffmpeg is installed for merging video and audio
+if ! command -v ffmpeg &> /dev/null; then
+    echo "⚠️ ffmpeg is recommended for merging HD video & audio."
 fi
 
 URL="$1"
-OUT_DIR="${2:-$HOME/Downloads}"
+PARAM_QUALITY="$2"
+PARAM_OUT="$3"
+
+# Check if 2nd parameter is a directory or quality
+if [[ -d "$PARAM_QUALITY" || "$PARAM_QUALITY" =~ ^/ ]]; then
+    OUT_DIR="$PARAM_QUALITY"
+    QUALITY=""
+elif [ -n "$PARAM_QUALITY" ]; then
+    QUALITY="$PARAM_QUALITY"
+    OUT_DIR="${PARAM_OUT:-$HOME/Downloads}"
+else
+    OUT_DIR="${PARAM_OUT:-$HOME/Downloads}"
+    QUALITY=""
+fi
+
 mkdir -p "$OUT_DIR"
 
-echo "Select video quality:"
-echo "1) 360p"
-echo "2) 480p"
-echo "3) 720p HD"
-echo "4) 1080p Full HD"
-echo "5) 1440p 2K"
-echo "6) Best available"
-read -p "Enter choice [1-6] (Default: 6): " choice
-choice=${choice:-6}
+# If quality was not specified on CLI, prompt interactively
+if [ -z "$QUALITY" ]; then
+    echo ""
+    echo "Select video quality:"
+    echo "  1) 360p"
+    echo "  2) 480p"
+    echo "  3) 720p HD"
+    echo "  4) 1080p Full HD"
+    echo "  5) 1440p 2K"
+    echo "  6) Best available"
+    
+    # Read with /dev/tty fallback for curl | bash execution
+    if [ -t 0 ]; then
+        read -p "Enter choice [1-6] (Default: 6): " choice
+    elif [ -e /dev/tty ]; then
+        read -p "Enter choice [1-6] (Default: 6): " choice < /dev/tty
+    else
+        choice="6"
+    fi
+    choice=${choice:-6}
 
-case $choice in
-    1) HEIGHT=360 ;;
-    2) HEIGHT=480 ;;
-    3) HEIGHT=720 ;;
-    4) HEIGHT=1080 ;;
-    5) HEIGHT=1440 ;;
-    6)
-        echo "🎬 Downloading best available quality to $OUT_DIR..."
-        yt-dlp \
-            --no-playlist \
-            -f "bestvideo+bestaudio/best" \
-            --merge-output-format mp4 \
-            -o "$OUT_DIR/%(title)s.%(ext)s" \
-            "$URL"
-        echo "✔ Download complete!"
-        exit 0
-        ;;
-    *)
-        echo "Invalid choice. Aborting."
-        exit 1
-        ;;
-esac
+    case "$choice" in
+        1) QUALITY="360" ;;
+        2) QUALITY="480" ;;
+        3) QUALITY="720" ;;
+        4) QUALITY="1080" ;;
+        5) QUALITY="1440" ;;
+        6|*) QUALITY="best" ;;
+    esac
+fi
 
-echo "🎬 Downloading ${HEIGHT}p video to $OUT_DIR..."
-yt-dlp \
-    --no-playlist \
-    -f "bestvideo[height<=${HEIGHT}]+bestaudio/best[height<=${HEIGHT}]" \
-    --merge-output-format mp4 \
-    -o "$OUT_DIR/%(title)s.%(ext)s" \
-    "$URL"
+echo ""
+if [[ "$QUALITY" == "best" || "$QUALITY" == "6" ]]; then
+    echo "🎬 Downloading best available quality to $OUT_DIR..."
+    yt-dlp \
+        --no-playlist \
+        -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best" \
+        --merge-output-format mp4 \
+        -o "$OUT_DIR/%(title)s.%(ext)s" \
+        "$URL"
+else
+    # Strip any trailing 'p' if passed (e.g. 1080p -> 1080)
+    HEIGHT="${QUALITY%p}"
+    echo "🎬 Downloading ${HEIGHT}p video to $OUT_DIR..."
+    yt-dlp \
+        --no-playlist \
+        -f "bestvideo[height<=${HEIGHT}][ext=mp4]+bestaudio[ext=m4a]/bestvideo[height<=${HEIGHT}]+bestaudio/best[height<=${HEIGHT}]/best" \
+        --merge-output-format mp4 \
+        -o "$OUT_DIR/%(title)s.%(ext)s" \
+        "$URL"
+fi
 
-echo "✔ Video download complete!"
+if [ $? -eq 0 ]; then
+    echo "✔ Video download complete! Saved to $OUT_DIR"
+else
+    echo "❌ Video download failed. Please check the URL or network connection."
+    exit 1
+fi

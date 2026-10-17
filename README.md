@@ -29,8 +29,8 @@ Production-grade shell automation scripts, developer CLI utilities, and administ
 | **[`bsp`](#15-bsp)** | Utilities | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/bsp) <file1> [file2...]` | `<file1> [file2...]` (Makes files executable) |
 | **[`media_dl`](#16-mediadl-unified-media-downloader)** | Media Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl) [options] <URL>` | `-a` (Audio MP3), `-v` (Video MP4), `-b` (Best), `-o <DIR>` |
 | **[`audio`](#17-audio)** | Audio Extractor | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/audio) "<URL>" [output_dir]` | `"<URL>" [output_dir]` (MP3 320kbps) |
-| **[`video`](#18-video)** | Video Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "<URL>" [output_dir]` | `"<URL>" [output_dir]` (Resolution menu) |
-| **[`envrn`](#3-envrn-virtual-environment-manager)** | Python venv | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) [command]` | `create`, `activate`, `remove`, `info`, `install`, `list` |
+| **[`video`](#18-video)** | Video Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "<URL>" [quality] [dir]` | `"<URL>" [quality: 360-1440|best] [output_dir]` |
+| **[`envrn`](#3-envrn-virtual-environment-manager)** | Python venv | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) [command] [name]` | `create`, `activate`, `install`, `list`, `info`, `remove` (or interactive menu) |
 | **[`newmig`](#2-djn-django-cli-helper)** | Django Migrations | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/newmig)` | *None (Wipes migrations & db.sqlite3)* |
 | **[`dauto`](#2-djn-django-cli-helper)** | Django Reset | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/dauto)` | *None (Wipes migrations, db, & rebuilds venv)* |
 | **[`fastrun`](#5-fastrun--fastmig)** | FastAPI Server | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fastrun) [port]` | `[port]` (Default: 8000) |
@@ -111,17 +111,35 @@ Swiss Army Knife for everyday Django operations.
 CLI manager to create, remove, inspect, and bulk-install package groups into Python `venv`.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn`
-- **One-Liner:**
+- **One-Liners:**
   ```bash
-  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) <command>
+  # Interactive Menu:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn)
+
+  # Direct Commands:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) create [venv_name]
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) install [venv_name]
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) list [venv_name]
   ```
 - **Attributes / Commands:**
-  - `create`: Creates virtual environment in `./venv`.
-  - `activate`: Instructions or subshell with active venv.
-  - `remove`: Deletes `./venv`.
-  - `info`: Displays `pyvenv.cfg` metadata.
-  - `install`: Interactive menu to install curated package groups (Core Django, Dev tools, DRF, Auth, Storage, Production, DB tools).
-  - `list`: Lists installed packages via `pip list`.
+  - *(No argument)*: Opens interactive terminal menu for all operations.
+  - `create [name]`: Creates virtual environment (default: `venv`), upgrades pip, setuptools, and wheel.
+  - `activate [name]`: Displays activation command or spawns an interactive subshell with active venv.
+  - `install [name]`: Interactive multi-select installer for curated packages:
+    - 1) Core Django (`Django`, `python-dotenv`, `psycopg2-binary`)
+    - 2) REST API & JWT (`DRF`, `simplejwt`, `corsheaders`, `drf-spectacular`)
+    - 3) FastAPI Stack (`fastapi`, `uvicorn`, `tortoise-orm`, `aerich`, `pydantic`)
+    - 4) Async & Background Tasks (`celery`, `redis`)
+    - 5) Database & Filters (`django-filter`, `django-import-export`)
+    - 6) Production & Deployment (`gunicorn`, `whitenoise`)
+    - 7) Dev & Debugging (`django-debug-toolbar`, `django-extensions`, `ipython`)
+    - 8) Media & Storage (`Pillow`, `django-storages`)
+    - 9) Complete Django Full Stack (All-in-one suite)
+    - 10) Install from `requirements.txt`
+  - `list [name]`: Lists installed packages via `pip list`.
+  - `info [name]`: Displays `pyvenv.cfg` configuration and interpreter path.
+  - `remove [name]`: Prompts and cleanly deletes the virtual environment directory.
+- **Safety**: Automatically uses the venv's internal pip (`$VENV_DIR/bin/pip`), preventing `externally-managed-environment` errors on Ubuntu 24.04 and Debian 12.
 
 ---
 
@@ -392,13 +410,19 @@ Dedicated YouTube MP3 audio extractor (320 kbps).
 ---
 
 #### 18. `video`
-Dedicated YouTube MP4 video downloader with interactive resolution picker.
+Dedicated YouTube MP4 video downloader with direct quality selection or interactive menu.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video`
-- **One-Liner:**
+- **One-Liners:**
   ```bash
+  # Interactive Quality Picker:
   bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "https://www.youtube.com/watch?v=xxxx"
+
+  # Direct Quality (e.g. 1080p, 720p, best):
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "https://www.youtube.com/watch?v=xxxx" 1080
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "https://www.youtube.com/watch?v=xxxx" best /path/to/folder
   ```
+- **Features**: Auto-checks for `yt-dlp` and `ffmpeg`, offering automated installation via `sudo apt` if missing. Merges native MP4 streams without re-encoding overhead.
 
 ---
 

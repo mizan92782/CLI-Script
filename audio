@@ -1,32 +1,67 @@
 #!/bin/bash
 
 # ==============================================================================
-# YouTube Audio Downloader (MP3)
+# YouTube & Web Audio Downloader (MP3 - 320kbps VBR 0)
 # ==============================================================================
 
-if [ -z "$1" ]; then
-    echo "Usage: ./audio <YouTube-URL> [output_directory]"
-    echo "Example: ./audio https://www.youtube.com/watch?v=xxxx"
-    exit 1
+show_help() {
+    echo "==================================================="
+    echo "           🎵 AUDIO DOWNLOADER (MP3)               "
+    echo "==================================================="
+    echo "Usage: ./audio <URL> [output_directory]"
+    echo ""
+    echo "Arguments:"
+    echo "  <URL>             YouTube or supported audio/video URL (Required)"
+    echo "  [output_dir]      Optional: Destination directory (Default: ~/Downloads)"
+    echo ""
+    echo "Examples:"
+    echo "  ./audio https://www.youtube.com/watch?v=xxxx"
+    echo "  ./audio https://www.youtube.com/watch?v=xxxx ~/Music"
+    echo "==================================================="
+}
+
+if [ -z "$1" ] || [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    show_help
+    exit 0
 fi
 
 # Ensure yt-dlp is installed
 if ! command -v yt-dlp &> /dev/null; then
     echo "❌ yt-dlp is not installed!"
-    echo "Install via: sudo apt install -y yt-dlp  OR  pip install yt-dlp"
-    exit 1
+    if command -v apt-get &> /dev/null && [ "$EUID" -eq 0 ]; then
+        apt-get update && apt-get install -y yt-dlp ffmpeg
+    elif command -v sudo &> /dev/null; then
+        read -p "Install yt-dlp & ffmpeg now via sudo apt? [Y/n]: " install_deps < /dev/tty
+        if [[ "$install_deps" =~ ^[Yy]$ || -z "$install_deps" ]]; then
+            sudo apt-get update && sudo apt-get install -y yt-dlp ffmpeg
+        else
+            echo "Please install manually: sudo apt install -y yt-dlp ffmpeg"
+            exit 1
+        fi
+    else
+        echo "Install via: sudo apt install -y yt-dlp ffmpeg  OR  pip install yt-dlp"
+        exit 1
+    fi
 fi
 
 # Ensure ffmpeg is installed for MP3 extraction
 if ! command -v ffmpeg &> /dev/null; then
-    echo "⚠️ ffmpeg is required for MP3 conversion. Installing or run: sudo apt install -y ffmpeg"
+    echo "❌ ffmpeg is required to convert audio to MP3."
+    if command -v sudo &> /dev/null; then
+        read -p "Install ffmpeg now via sudo apt? [Y/n]: " install_ffmpeg < /dev/tty
+        if [[ "$install_ffmpeg" =~ ^[Yy]$ || -z "$install_ffmpeg" ]]; then
+            sudo apt-get update && sudo apt-get install -y ffmpeg
+        else
+            exit 1
+        fi
+    fi
 fi
 
 URL="$1"
 OUT_DIR="${2:-$HOME/Downloads}"
 mkdir -p "$OUT_DIR"
 
-echo "🎵 Downloading highest quality audio to $OUT_DIR..."
+echo "🎵 Downloading highest-quality audio (MP3 320kbps) to $OUT_DIR..."
 yt-dlp --no-playlist \
     -f "bestaudio/best" \
     -x \
@@ -35,4 +70,9 @@ yt-dlp --no-playlist \
     -o "$OUT_DIR/%(title)s.%(ext)s" \
     "$URL"
 
-echo "✔ Audio download complete!"
+if [ $? -eq 0 ]; then
+    echo "✔ Audio download complete! Saved to $OUT_DIR"
+else
+    echo "❌ Audio download failed. Please check the URL or network connection."
+    exit 1
+fi

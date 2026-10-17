@@ -52,8 +52,7 @@ fi
 if [ "$MODE" == "audio" ]; then
     bash "$SCRIPT_DIR/audio" "$URL" "$OUT_DIR"
 elif [ "$MODE" == "best" ]; then
-    mkdir -p "$OUT_DIR"
-    yt-dlp --no-playlist -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "$OUT_DIR/%(title)s.%(ext)s" "$URL"
+    bash "$SCRIPT_DIR/video" "$URL" best "$OUT_DIR"
 else
-    bash "$SCRIPT_DIR/video" "$URL" "$OUT_DIR"
+    bash "$SCRIPT_DIR/video" "$URL" "" "$OUT_DIR"
 fi
