@@ -169,11 +169,36 @@ fi
 # --- Step 4: Enable & Start Systemd Service ---
 echo ""
 echo -e "${BOLD}${CYAN}[2/5] Starting and enabling Nginx service...${NC}"
+
+# Check and resolve Port 80/443 web server conflicts (Apache2, Caddy, Lighttpd)
+for conflict_srv in apache2 caddy lighttpd; do
+    if systemctl is-active --quiet "$conflict_srv" 2>/dev/null; then
+        echo -e "${YELLOW}⚠ Port conflict detected: '$conflict_srv' is active and occupying Port 80.${NC}"
+        echo "Stopping and disabling $conflict_srv to allow Nginx to bind to Port 80..."
+        $SUDO systemctl stop "$conflict_srv" 2>/dev/null || true
+        $SUDO systemctl disable "$conflict_srv" 2>/dev/null || true
+        echo -e "${GREEN}✔ '$conflict_srv' stopped and disabled.${NC}"
+    fi
+done
+
+# Check if another process is still holding port 80
+if command -v ss &>/dev/null; then
+    PORT_80_PROC=$(ss -tlpn 'sport = :80' 2>/dev/null | grep -v "nginx" | awk 'NR>1 {print $NF}')
+    if [ -n "$PORT_80_PROC" ]; then
+        echo -e "${YELLOW}⚠ Warning: Process ($PORT_80_PROC) is listening on Port 80.${NC}"
+    fi
+fi
+
 $SUDO systemctl enable nginx
 
 if ! systemctl is-active --quiet nginx; then
     echo "Starting Nginx..."
-    $SUDO systemctl start nginx
+    if ! $SUDO systemctl start nginx; then
+        echo -e "${RED}✖ Failed to start Nginx service.${NC}"
+        echo -e "${YELLOW}Diagnostics from journalctl:${NC}"
+        $SUDO journalctl -u nginx.service --no-pager -n 12 2>/dev/null || true
+        exit 1
+    fi
 fi
 echo -e "${GREEN}✔ Nginx service is active and enabled on boot.${NC}"
 
@@ -284,9 +309,14 @@ $SUDO ln -sf "$SITES_AVAILABLE" "$SITES_ENABLED"
 # Test configuration
 echo "Testing Nginx syntax..."
 if $SUDO nginx -t; then
-    echo "Reloading Nginx service..."
-    $SUDO systemctl reload nginx
-    echo -e "${GREEN}✔ Nginx configuration successfully tested and reloaded!${NC}"
+    if systemctl is-active --quiet nginx; then
+        echo "Reloading Nginx service..."
+        $SUDO systemctl reload nginx
+    else
+        echo "Starting Nginx service..."
+        $SUDO systemctl start nginx
+    fi
+    echo -e "${GREEN}✔ Nginx configuration successfully tested and applied!${NC}"
 else
     echo -e "${RED}✖ Nginx configuration test failed! Removing enabled symlink to prevent crash.${NC}"
     $SUDO rm -f "$SITES_ENABLED"
@@ -298,25 +328,34 @@ if [ "$ENABLE_SSL" = true ] && [ "$DOMAIN" != "_" ] && [ "$DOMAIN" != "localhost
     echo ""
     echo -e "${BOLD}${CYAN}[5/5] Configuring Let's Encrypt SSL Certificate...${NC}"
 
-    if ! command -v certbot &> /dev/null; then
-        echo "Installing Certbot and python3-certbot-nginx..."
-        $SUDO apt-get update -y
-        $SUDO apt-get install -y certbot python3-certbot-nginx
-    fi
-
-    CERTBOT_CMD="certbot --nginx -d $DOMAIN --non-interactive --agree-tos --redirect"
-    if [ -n "$SSL_EMAIL" ]; then
-        CERTBOT_CMD="$CERTBOT_CMD -m $SSL_EMAIL"
+    # Verify if domain resolves to an IP address before calling Let's Encrypt
+    if ! getent ahosts "$DOMAIN" &>/dev/null; then
+        echo -e "${YELLOW}⚠ Notice: Domain '$DOMAIN' has no public DNS record or does not resolve.${NC}"
+        echo -e "${YELLOW}  Let's Encrypt requires a live domain whose DNS points to this server's IP.${NC}"
+        echo -e "${YELLOW}  Your HTTP reverse proxy is fully configured and working on Port 80.${NC}"
+        echo -e "${YELLOW}  Once your domain DNS propagates to this server, run:${NC}"
+        echo -e "    ${BOLD}sudo certbot --nginx -d $DOMAIN${NC}"
     else
-        CERTBOT_CMD="$CERTBOT_CMD --register-unsafely-without-email"
-    fi
+        if ! command -v certbot &> /dev/null; then
+            echo "Installing Certbot and python3-certbot-nginx..."
+            $SUDO apt-get update -y
+            $SUDO apt-get install -y certbot python3-certbot-nginx
+        fi
 
-    echo "Executing Certbot for $DOMAIN..."
-    if $SUDO $CERTBOT_CMD; then
-        echo -e "${GREEN}✔ SSL Certificate successfully installed! HTTPS is now active.${NC}"
-    else
-        echo -e "${YELLOW}⚠ Automated non-interactive SSL failed. You can run interactive certbot with:${NC}"
-        echo "  sudo certbot --nginx -d $DOMAIN"
+        CERTBOT_CMD="certbot --nginx -d $DOMAIN --non-interactive --agree-tos --redirect"
+        if [ -n "$SSL_EMAIL" ]; then
+            CERTBOT_CMD="$CERTBOT_CMD -m $SSL_EMAIL"
+        else
+            CERTBOT_CMD="$CERTBOT_CMD --register-unsafely-without-email"
+        fi
+
+        echo "Executing Certbot for $DOMAIN..."
+        if $SUDO $CERTBOT_CMD; then
+            echo -e "${GREEN}✔ SSL Certificate successfully installed! HTTPS is now active.${NC}"
+        else
+            echo -e "${YELLOW}⚠ Automated non-interactive SSL failed. You can run interactive certbot with:${NC}"
+            echo "  sudo certbot --nginx -d $DOMAIN"
+        fi
     fi
 else
     echo ""

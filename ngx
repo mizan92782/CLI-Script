@@ -77,13 +77,30 @@ automated_setup() {
 
     echo ""
     echo -e "${BOLD}${CYAN}==> Step 2: Enabling and starting Nginx systemd service...${NC}"
+    
+    # Check and resolve Port 80/443 web server conflicts (Apache2, Caddy, Lighttpd)
+    for conflict_srv in apache2 caddy lighttpd; do
+        if systemctl is-active --quiet "$conflict_srv" 2>/dev/null; then
+            echo -e "${YELLOW}⚠ Port conflict detected: '$conflict_srv' is active and occupying Port 80.${NC}"
+            echo "Stopping and disabling $conflict_srv to allow Nginx to bind to Port 80..."
+            $SUDO systemctl stop "$conflict_srv" 2>/dev/null || true
+            $SUDO systemctl disable "$conflict_srv" 2>/dev/null || true
+            echo -e "${GREEN}✔ '$conflict_srv' stopped and disabled.${NC}"
+        fi
+    done
+
     $SUDO systemctl enable nginx
     
     if systemctl is-active --quiet nginx; then
         echo -e "${GREEN}✔ Nginx service is active and running.${NC}"
     else
         echo "Starting Nginx service..."
-        $SUDO systemctl start nginx
+        if ! $SUDO systemctl start nginx; then
+            echo -e "${RED}✖ Failed to start Nginx service.${NC}"
+            echo -e "${YELLOW}Diagnostics from journalctl:${NC}"
+            $SUDO journalctl -u nginx.service --no-pager -n 12 2>/dev/null || true
+            exit 1
+        fi
         echo -e "${GREEN}✔ Nginx service started successfully.${NC}"
     fi
 
