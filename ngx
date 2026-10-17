@@ -1,0 +1,296 @@
+#!/bin/bash
+
+# ==============================================================================
+# Nginx Automated Full Setup & CLI Manager (ngx)
+# Automates: Installation, Systemd Enable, Port 80/443 Firewall Exposure,
+#            Reverse Proxy Generation, SSL (Certbot), and Service Management.
+# ==============================================================================
+
+set -e
+
+# --- Colors for Output ---
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# Determine sudo prefix
+if [ "$EUID" -eq 0 ]; then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
+
+show_banner() {
+    echo -e "${CYAN}"
+    echo "==================================================="
+    echo "          🌐 NGINX AUTOMATED SETUP & MANAGER       "
+    echo "==================================================="
+    echo -e "${NC}"
+}
+
+show_help() {
+    show_banner
+    cat << 'EOF'
+Usage: ./ngx [command] [options]
+
+Commands:
+  setup, install      Full automated setup: check, install, enable & expose port 80/443
+  status              Check Nginx systemd status, syntax, and listening ports
+  start               Start Nginx service
+  stop                Stop Nginx service
+  restart             Restart Nginx service
+  reload              Test configuration syntax and safely reload Nginx
+  test                Test Nginx configuration syntax (nginx -t)
+  logs                Live stream access and error logs
+  proxy <domain> <port> [name]
+                      Auto-generate a reverse proxy configuration for Django/FastAPI/Node
+  ssl <domain>        Automate free SSL certificate setup via Let's Encrypt / Certbot
+  --help, -h          Show this help message
+
+Examples:
+  ./ngx                          # Run full automated setup
+  ./ngx status                   # Inspect Nginx health & ports
+  ./ngx reload                   # Safe reload after editing configs
+  ./ngx proxy api.example.com 8000
+  ./ngx ssl api.example.com
+===================================================
+EOF
+}
+
+# --- Core Automated Setup Function ---
+automated_setup() {
+    show_banner
+    echo -e "${BOLD}${CYAN}==> Step 1: Checking Nginx installation...${NC}"
+    
+    if command -v nginx &> /dev/null; then
+        NGINX_VERSION=$(nginx -v 2>&1)
+        echo -e "${GREEN}✔ Nginx is already installed:${NC} $NGINX_VERSION"
+    else
+        echo -e "${YELLOW}Nginx is not installed. Installing via apt...${NC}"
+        $SUDO apt-get update -y
+        $SUDO apt-get install -y nginx
+        echo -e "${GREEN}✔ Nginx installed successfully!${NC}"
+    fi
+
+    echo ""
+    echo -e "${BOLD}${CYAN}==> Step 2: Enabling and starting Nginx systemd service...${NC}"
+    $SUDO systemctl enable nginx
+    
+    if systemctl is-active --quiet nginx; then
+        echo -e "${GREEN}✔ Nginx service is active and running.${NC}"
+    else
+        echo "Starting Nginx service..."
+        $SUDO systemctl start nginx
+        echo -e "${GREEN}✔ Nginx service started successfully.${NC}"
+    fi
+
+    echo ""
+    echo -e "${BOLD}${CYAN}==> Step 3: Configuring firewall (Exposing Port 80 & 443)...${NC}"
+    if command -v ufw &> /dev/null; then
+        UFW_STATUS=$($SUDO ufw status | grep -i "Status:" | awk '{print $2}')
+        echo "Firewall (UFW) detected. Current status: $UFW_STATUS"
+        
+        echo "Allowing 'Nginx Full' (Port 80 HTTP & Port 443 HTTPS)..."
+        $SUDO ufw allow 'Nginx Full' > /dev/null 2>&1 || {
+            $SUDO ufw allow 80/tcp
+            $SUDO ufw allow 443/tcp
+        }
+        echo -e "${GREEN}✔ Port 80 and Port 443 opened in UFW firewall.${NC}"
+    elif command -v iptables &> /dev/null; then
+        echo "UFW not found. Ensuring iptables allows Port 80 & 443..."
+        $SUDO iptables -A INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || true
+        $SUDO iptables -A INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || true
+        echo -e "${GREEN}✔ Port 80/443 rule added to iptables.${NC}"
+    else
+        echo -e "${YELLOW}ℹ No firewall (ufw/iptables) detected. Ports are open by default.${NC}"
+    fi
+
+    echo ""
+    echo -e "${BOLD}${CYAN}==> Step 4: Verifying Nginx configuration syntax...${NC}"
+    $SUDO nginx -t
+
+    echo ""
+    echo -e "${BOLD}${CYAN}==> Step 5: Checking listening ports & HTTP accessibility...${NC}"
+    if command -v ss &> /dev/null; then
+        LISTEN_STATUS=$(ss -tulpn | grep ":80 " || true)
+        if [ -n "$LISTEN_STATUS" ]; then
+            echo -e "${GREEN}✔ Nginx is actively listening on Port 80 (HTTP).${NC}"
+        fi
+    fi
+
+    # Detect Server IP
+    SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
+
+    echo ""
+    echo -e "${GREEN}===================================================${NC}"
+    echo -e "${GREEN}🎉 NGINX AUTOMATED SETUP COMPLETED SUCCESSFULLY!    ${NC}"
+    echo -e "${GREEN}===================================================${NC}"
+    echo -e "${BOLD}Service Status:${NC}   Active & Enabled (Runs on system boot)"
+    echo -e "${BOLD}Exposed Ports:${NC}    Port 80 (HTTP) & Port 443 (HTTPS)"
+    echo -e "${BOLD}Test in Browser:${NC}  http://$SERVER_IP"
+    echo -e "${BOLD}Config Directory:${NC}/etc/nginx/"
+    echo -e "${BOLD}Default Web Root:${NC}/var/www/html/"
+    echo -e "${GREEN}===================================================${NC}"
+}
+
+# --- Service Status & Diagnostics ---
+check_status() {
+    show_banner
+    echo -e "${CYAN}--- Systemd Service Status ---${NC}"
+    $SUDO systemctl status nginx --no-pager || true
+    echo ""
+    echo -e "${CYAN}--- Configuration Syntax Test ---${NC}"
+    $SUDO nginx -t || true
+    echo ""
+    echo -e "${CYAN}--- Listening Web Ports ---${NC}"
+    if command -v ss &> /dev/null; then
+        ss -tulpn | grep -E ':(80|443)\s' || echo "No process currently listening on port 80/443."
+    fi
+}
+
+# --- Safe Reload ---
+safe_reload() {
+    echo "Testing Nginx configuration before reloading..."
+    if $SUDO nginx -t; then
+        echo -e "${GREEN}Configuration syntax is valid. Reloading Nginx...${NC}"
+        $SUDO systemctl reload nginx
+        echo -e "${GREEN}✔ Nginx reloaded successfully!${NC}"
+    else
+        echo -e "${RED}✖ Configuration syntax test failed! Nginx was NOT reloaded to prevent downtime.${NC}"
+        exit 1
+    fi
+}
+
+# --- Reverse Proxy Generator ---
+create_reverse_proxy() {
+    DOMAIN="$1"
+    PORT="$2"
+    SITE_NAME="${3:-$DOMAIN}"
+
+    if [ -z "$DOMAIN" ] || [ -z "$PORT" ]; then
+        echo -e "${RED}Error: Domain and target port are required!${NC}"
+        echo "Usage: ./ngx proxy <domain> <port> [config_name]"
+        echo "Example: ./ngx proxy api.example.com 8000"
+        exit 1
+    fi
+
+    CONF_PATH="/etc/nginx/sites-available/$SITE_NAME"
+    ENABLED_LINK="/etc/nginx/sites-enabled/$SITE_NAME"
+
+    echo "Creating reverse proxy configuration for '$DOMAIN' -> http://127.0.0.1:$PORT..."
+    $SUDO bash -c "cat << 'EOF' > $CONF_PATH
+server {
+    listen 80;
+    server_name $DOMAIN;
+
+    client_max_body_size 100M;
+
+    location / {
+        proxy_pass http://127.0.0.1:$PORT;
+        proxy_set_header Host \$http_host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_redirect off;
+
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection \"upgrade\";
+    }
+}
+EOF"
+
+    echo "Enabling site configuration..."
+    $SUDO ln -sf "$CONF_PATH" "$ENABLED_LINK"
+
+    echo "Validating Nginx configuration..."
+    if $SUDO nginx -t; then
+        $SUDO systemctl reload nginx
+        echo -e "${GREEN}✔ Reverse proxy successfully created and active!${NC}"
+        echo -e "Requests to ${BOLD}http://$DOMAIN${NC} will be forwarded to ${BOLD}http://127.0.0.1:$PORT${NC}."
+    else
+        echo -e "${RED}✖ Configuration test failed. Reverting...${NC}"
+        $SUDO rm -f "$ENABLED_LINK"
+        exit 1
+    fi
+}
+
+# --- SSL Certbot Automator ---
+setup_ssl() {
+    DOMAIN="$1"
+    if [ -z "$DOMAIN" ]; then
+        echo -e "${RED}Error: Domain name is required for SSL setup!${NC}"
+        echo "Usage: ./ngx ssl <domain>"
+        exit 1
+    fi
+
+    echo "Checking Certbot and Nginx plugin..."
+    if ! command -v certbot &> /dev/null; then
+        echo "Installing Certbot and python3-certbot-nginx..."
+        $SUDO apt-get update -y
+        $SUDO apt-get install -y certbot python3-certbot-nginx
+    fi
+
+    echo "Requesting Let's Encrypt SSL Certificate for '$DOMAIN'..."
+    $SUDO certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --redirect -m "admin@$DOMAIN" || {
+        echo -e "${YELLOW}Automated non-interactive request failed. Launching interactive certbot...${NC}"
+        $SUDO certbot --nginx -d "$DOMAIN"
+    }
+    echo -e "${GREEN}✔ SSL configuration complete for $DOMAIN!${NC}"
+}
+
+# --- Command Routing ---
+CMD="${1:-setup}"
+shift || true
+
+case "$CMD" in
+    setup|install)
+        automated_setup
+        ;;
+    status)
+        check_status
+        ;;
+    start)
+        echo "Starting Nginx..."
+        $SUDO systemctl start nginx && echo -e "${GREEN}✔ Nginx started.${NC}"
+        ;;
+    stop)
+        echo "Stopping Nginx..."
+        $SUDO systemctl stop nginx && echo -e "${YELLOW}✔ Nginx stopped.${NC}"
+        ;;
+    restart)
+        echo "Restarting Nginx..."
+        $SUDO systemctl restart nginx && echo -e "${GREEN}✔ Nginx restarted.${NC}"
+        ;;
+    reload)
+        safe_reload
+        ;;
+    test)
+        echo "Testing Nginx syntax..."
+        $SUDO nginx -t
+        ;;
+    logs)
+        echo "Streaming Nginx access & error logs (Ctrl+C to exit)..."
+        $SUDO tail -f /var/log/nginx/access.log /var/log/nginx/error.log
+        ;;
+    proxy)
+        create_reverse_proxy "$1" "$2" "$3"
+        ;;
+    ssl)
+        setup_ssl "$1"
+        ;;
+    --help|-h|help)
+        show_help
+        ;;
+    *)
+        echo -e "${RED}Unknown command: '$CMD'${NC}"
+        show_help
+        exit 1
+        ;;
+esac
+
+exit 0

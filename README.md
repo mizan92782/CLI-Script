@@ -20,16 +20,18 @@ Production-grade shell automation scripts, developer CLI utilities, and administ
 | **[`djn`](#2-djn-django-cli-helper)** | Django CLI | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/djn) [command]` | `runserver`, `mig`, `resetmig`, `resetall`, `superuser`, `app`, `shell` |
 | **[`fapi`](#4-fapi-fastapi-cli-helper)** | FastAPI / Aerich | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/fapi) [command]` | `run [port]`, `prod [port]`, `migrate`, `init-db`, `upgrade` |
 | **[`dock`](#6-dock-docker-manager)** | Docker CLI | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/dock) [command]` | `ps`, `run`, `runhost`, `exec`, `logs`, `stats`, `compose`, `install` |
+| **[`nginx_auto`](#9-nginx_auto--ngx-nginx-server-automation)** | Nginx Setup & Proxy | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/nginx_auto) [domain] [port] [ssl_email]` | `<domain> <port> [ssl_email]` (Full automated Nginx + Reverse Proxy + SSL) |
+| **[`ngx`](#9-nginx_auto--ngx-nginx-server-automation)** | Nginx Manager | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ngx) [command]` | `setup`, `status`, `reload`, `proxy <domain> <port>`, `ssl <domain>` |
 | **[`docker_reinstall`](#7-dockerreinstall)** | Docker Engine | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/docker_reinstall)` | *None (Automated CE + Compose installer)* |
-| **[`pgsql`](#9-pgsql-postgresql-manager)** | PostgreSQL | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/pgsql)` | *None (Interactive menu 1-14)* |
-| **[`gitinit`](#10-gitinit)** | Git Automation | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitinit)` | *None (Interactive initialization)* |
-| **[`gitpush`](#11-gitpush)** | Git Automation | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitpush)` | *None (Interactive commit & push)* |
-| **[`syshelp`](#12-syshelp-system-navigator)** | Cheat Sheets | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/syshelp) [topic]` | `docker`, `net`, `port`, `ps`, `pkg`, `perm`, `sys`, `user`, `file` |
-| **[`update`](#14-update)** | System Maintenance | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/update)` | *None (Apt update, upgrade & autoremove)* |
-| **[`bsp`](#15-bsp)** | Utilities | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/bsp) <file1> [file2...]` | `<file1> [file2...]` (Makes files executable) |
-| **[`media_dl`](#16-mediadl-unified-media-downloader)** | Media Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl) [options] <URL>` | `-a` (Audio MP3), `-v` (Video MP4), `-b` (Best), `-o <DIR>` |
-| **[`audio`](#17-audio)** | Audio Extractor | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/audio) "<URL>" [output_dir]` | `"<URL>" [output_dir]` (MP3 320kbps) |
-| **[`video`](#18-video)** | Video Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "<URL>" [quality] [dir]` | `"<URL>" [quality: 360-1440|best] [output_dir]` |
+| **[`pgsql`](#10-pgsql-postgresql-manager)** | PostgreSQL | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/pgsql)` | *None (Interactive menu 1-14)* |
+| **[`gitinit`](#11-gitinit)** | Git Automation | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitinit)` | *None (Interactive initialization)* |
+| **[`gitpush`](#12-gitpush)** | Git Automation | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitpush)` | *None (Interactive commit & push)* |
+| **[`syshelp`](#13-syshelp-system-navigator)** | Cheat Sheets | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/syshelp) [topic]` | `docker`, `net`, `port`, `ps`, `pkg`, `perm`, `sys`, `user`, `file` |
+| **[`update`](#15-update)** | System Maintenance | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/update)` | *None (Apt update, upgrade & autoremove)* |
+| **[`bsp`](#16-bsp)** | Utilities | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/bsp) <file1> [file2...]` | `<file1> [file2...]` (Makes files executable) |
+| **[`media_dl`](#17-mediadl-unified-media-downloader)** | Media Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl) [options] <URL>` | `-a` (Audio MP3), `-v` (Video MP4), `-b` (Best), `-o <DIR>` |
+| **[`audio`](#18-audio)** | Audio Extractor | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/audio) "<URL>" [output_dir]` | `"<URL>" [output_dir]` (MP3 320kbps) |
+| **[`video`](#19-video)** | Video Downloader | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video) "<URL>" [quality] [dir]` | `"<URL>" [quality: 360-1440|best] [output_dir]` |
 | **[`envrn`](#3-envrn-virtual-environment-manager)** | Python venv | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/envrn) [command] [name]` | `create`, `activate`, `install`, `list`, `info`, `remove` (or interactive menu) |
 | **[`newmig`](#2-djn-django-cli-helper)** | Django Migrations | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/newmig)` | *None (Wipes migrations & db.sqlite3)* |
 | **[`dauto`](#2-djn-django-cli-helper)** | Django Reset | `bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/dauto)` | *None (Wipes migrations, db, & rebuilds venv)* |
@@ -248,11 +250,79 @@ Complete Docker cheat sheet and troubleshooting guide for common failures (port 
 
 ---
 
+### 🌐 Nginx Web Server Automation
+
+---
+
+#### 9. `nginx_auto` & `ngx` (Nginx Server Automation)
+
+##### `nginx_auto` (Argument-Driven Full Server Setup)
+Automates end-to-end Nginx setup taking **Domain**, **Backend Port (Reverse Proxy)**, and **SSL** directly as arguments. Checks installation, installs if missing, enables systemd, opens firewall ports 80/443, generates a production reverse proxy block, tests syntax, reloads, and sets up Let's Encrypt SSL.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/nginx_auto`
+- **One-Liners:**
+  ```bash
+  # 1. Reverse proxy to Django/backend on port 8000:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/nginx_auto) api.example.com 8000
+
+  # 2. Reverse proxy + Auto Let's Encrypt SSL:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/nginx_auto) api.example.com 8000 admin@example.com
+
+  # 3. Default server reverse proxy on server IP:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/nginx_auto) _ 8000
+
+  # 4. Interactive mode (prompts for domain & port):
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/nginx_auto)
+  ```
+- **Arguments / Flags:**
+  - `<domain>`, `-d`: Domain name or `_` for default server IP.
+  - `<port>`, `-p`: Backend application port (e.g. `8000`, `3000`, `5000`).
+  - `[ssl_email]`, `-e`: Admin email for automatic Let's Encrypt SSL certificate.
+  - `--ssl`, `-s`: Enable SSL via Certbot.
+
+---
+
+##### `ngx` (Ongoing Nginx Management & CLI Helper)
+Comprehensive management utility for inspecting, reloading, generating proxies, and debugging Nginx.
+
+- **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ngx`
+- **One-Liners:**
+  ```bash
+  # 1. Full Automated Setup (Checks, Installs, Enables & Opens Port 80/443):
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ngx)
+
+  # 2. Check Nginx Health, Syntax & Listening Ports:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ngx) status
+
+  # 3. Safely Test Syntax & Reload Nginx:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ngx) reload
+
+  # 4. Auto-Generate Reverse Proxy (for Django/FastAPI/Node):
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ngx) proxy api.example.com 8000
+
+  # 5. Free SSL Certificate via Let's Encrypt / Certbot:
+  bash <(curl -fsSL https://raw.githubusercontent.com/mizan92782/CLI-Script/main/ngx) ssl api.example.com
+  ```
+- **Attributes / Commands:**
+  | Command | Arguments | Description |
+  | :--- | :--- | :--- |
+  | *(No args)*, `setup` | *None* | Verifies/installs Nginx, enables systemd on boot, opens firewall ports 80/443, tests syntax, and prints server IP |
+  | `status` | *None* | Checks systemctl status, syntax test (`nginx -t`), and listening ports |
+  | `reload` | *None* | Runs `nginx -t` first and safely reloads Nginx with zero downtime |
+  | `restart` | *None* | Restarts Nginx service |
+  | `start` / `stop` | *None* | Starts or stops Nginx service |
+  | `test` | *None* | Validates Nginx configuration syntax (`nginx -t`) |
+  | `proxy` | `<domain> <port> [name]` | Automatically generates a reverse proxy block forwarding to your local backend port |
+  | `ssl` | `<domain>` | Installs Certbot and automates Let's Encrypt SSL certificate generation |
+  | `logs` | *None* | Real-time log tail of `/var/log/nginx/access.log` and `error.log` |
+
+---
+
 ### 🐘 Database Administration
 
 ---
 
-#### 9. `pgsql` (PostgreSQL Manager)
+#### 10. `pgsql` (PostgreSQL Manager)
 Interactive menu-driven PostgreSQL management tool.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/pgsql`
@@ -274,7 +344,7 @@ Interactive menu-driven PostgreSQL management tool.
 
 ---
 
-#### 10. `gitinit`
+#### 11. `gitinit`
 Automates Git repository setup with best practices.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitinit`
@@ -291,7 +361,7 @@ Automates Git repository setup with best practices.
 
 ---
 
-#### 11. `gitpush`
+#### 12. `gitpush`
 Fast, interactive stage, commit, and push utility.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/gitpush`
@@ -312,7 +382,7 @@ Fast, interactive stage, commit, and push utility.
 
 ---
 
-#### 12. `syshelp` (System Navigator)
+#### 13. `syshelp` (System Navigator)
 Master interactive hub connecting all 9 Linux cheat sheets.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/syshelp`
@@ -329,7 +399,7 @@ Master interactive hub connecting all 9 Linux cheat sheets.
 
 ---
 
-#### 13. Individual Cheat Sheet One-Liners
+#### 14. Individual Cheat Sheet One-Liners
 
 | Topic | Focus | Direct Curl Execution Command |
 | :--- | :--- | :--- |
@@ -348,7 +418,7 @@ Master interactive hub connecting all 9 Linux cheat sheets.
 
 ---
 
-#### 14. `update`
+#### 15. `update`
 Automated system maintenance tool. Updates package lists, performs full package upgrade, and cleans up obsolete dependencies and package caches.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/update`
@@ -359,7 +429,7 @@ Automated system maintenance tool. Updates package lists, performs full package 
 
 ---
 
-#### 15. `bsp`
+#### 16. `bsp`
 Utility to grant executable permissions (`chmod +x`) to one or more files.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/bsp`
@@ -374,7 +444,7 @@ Utility to grant executable permissions (`chmod +x`) to one or more files.
 
 ---
 
-#### 16. `media_dl` (Unified Media Downloader)
+#### 17. `media_dl` (Unified Media Downloader)
 Unified media downloader for YouTube and other web platforms.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/media_dl`
@@ -398,7 +468,7 @@ Unified media downloader for YouTube and other web platforms.
 
 ---
 
-#### 17. `audio`
+#### 18. `audio`
 Dedicated YouTube MP3 audio extractor (320 kbps).
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/audio`
@@ -409,7 +479,7 @@ Dedicated YouTube MP3 audio extractor (320 kbps).
 
 ---
 
-#### 18. `video`
+#### 19. `video`
 Dedicated YouTube MP4 video downloader with direct quality selection or interactive menu.
 
 - **GitHub Raw URL:** `https://raw.githubusercontent.com/mizan92782/CLI-Script/main/video`
