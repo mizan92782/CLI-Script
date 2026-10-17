@@ -1,106 +1,120 @@
 #!/bin/bash
 
-show_git_help() {
-    echo "======================================="
-    echo "        GIT COMMAND REMINDER"
-    echo "======================================="
-    echo ""
-    echo "Basic Commands:"
-    echo "  git init                 - Initialize a new Git repo"
-    echo "  git clone <url>          - Clone a remote repo"
-    echo "  git status               - Show changes"
-    echo "  git add .                - Stage all changes"
-    echo "  git add <file>           - Stage a specific file"
-    echo "  git commit -m \"msg\"      - Commit with message"
-    echo "  git log                  - Show commit history"
-    echo ""
-    echo "Branching:"
-    echo "  git branch               - List branches"
-    echo "  git branch <name>        - Create branch"
-    echo "  git checkout <branch>    - Switch branch"
-    echo "  git switch <branch>      - Switch branch (newer)"
-    echo "  git merge <branch>       - Merge branch into current"
-    echo ""
-    echo "Remote Commands:"
-    echo "  git remote -v            - Show remotes"
-    echo "  git remote add origin <url> - Add remote repo"
-    echo "  git push -u origin main  - Push first time"
-    echo "  git push                 - Push changes"
-    echo "  git pull                 - Pull latest changes"
-    echo ""
-    echo "Undoing / Fixing:"
-    echo "  git reset --hard HEAD    - Undo all changes"
-    echo "  git checkout -- <file>   - Restore file"
-    echo "  git revert <commit>      - Revert a commit"
-    echo ""
-    echo "Stash Commands:"
-    echo "  git stash                - Save temporary changes"
-    echo "  git stash pop            - Restore stashed changes"
-    echo ""
-    echo "======================================="
-    echo "Stopping script..."
-    exit
+# ==============================================================================
+# Automated Git Stage, Commit & Push Tool
+# ==============================================================================
 
-    echo "======================================="
-    
-    
+# Ensure inside a git repository
+if [ ! -d ".git" ]; then
+    echo "❌ Error: Not a git repository. Run 'git init' or './gitinit' first."
+    exit 1
+fi
+
+show_git_help() {
+    cat << 'EOF'
+===================================================
+             🚀 GIT COMMAND QUICK REFERENCE
+===================================================
+Basic Commands:
+  git status               - Show working tree status
+  git add .                - Stage all changes
+  git commit -m "msg"      - Commit staged changes
+  git log --oneline -n 5   - View recent commits
+
+Branching:
+  git branch               - List local branches
+  git switch -c <name>     - Create and switch to new branch
+  git checkout <name>      - Switch to existing branch
+
+Remotes & Sync:
+  git remote -v            - View configured remotes
+  git pull origin <branch> - Fetch and merge remote changes
+  git push origin <branch> - Push local commits to remote
+
+Troubleshooting:
+  git reset --soft HEAD~1  - Undo last commit but keep changes
+  git stash / git stash pop- Temporarily shelf/restore uncommitted work
+===================================================
+EOF
 }
 
-# Show help automatically when script runs
-if [ "$1" == "help" ]; then
+if [[ "$1" == "--help" || "$1" == "-h" || "$1" == "help" ]]; then
     show_git_help
+    exit 0
 fi
 
+echo "==================================================="
+echo "              🚀 GIT AUTOMATION PUSH               "
+echo "==================================================="
 
+# 1. Show status
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+echo "Current Branch: $CURRENT_BRANCH"
+echo ""
+echo "--- Working Tree Status ---"
+git status -s
+echo ""
 
-# git status
-echo "GIT STATUS ================================="
-git status
-echo -e "\n\n"
+# Check if there are changes
+if [ -z "$(git status --porcelain)" ]; then
+    echo "✔ Working tree is clean. Nothing to commit."
+    read -p "Do you still want to push existing commits to remote? [y/N]: " push_only
+    if [[ ! "$push_only" =~ ^[Yy]$ ]]; then
+        exit 0
+    fi
+else
+    # 2. Stage changes
+    echo "Staging all changes (git add -A)..."
+    git add -A
+    git status -s
+    echo ""
 
-# git add
-echo "GIT ADD ALL ===================================="
-git add -A
-git status
-echo -e "\n\n"
-
-# git commit
-echo "ENTER COMMIT ================================"
-read mycommit
-git commit -m "${mycommit}"
-echo -e "\n\n"
-
-
-# Show All branch
-echo "SHOW BRANCH LIST ================================="
-git branch
-echo -e "\n\n"
-
-
-
-# Option to create a new branch
-echo -n "DO YOUT WANT TO CREAT NEW BRANCH? (y/n): "
-read create_branch
-
-if [[ "$create_branch" == "y" || "$create_branch" == "Y" ]]; then
-    echo -n "Enter new branch name: "
-    read new_branch
-    git branch "$new_branch"
-    echo "Branch ${create_branch} created successfully"
+    # 3. Commit
+    read -p "Enter commit message (Default: 'Update $(date +'%Y-%m-%d %H:%M')'): " mycommit
+    mycommit=${mycommit:-"Update $(date +'%Y-%m-%d %H:%M')"}
+    git commit -m "$mycommit"
     echo ""
 fi
-echo -e "\n\n"
 
+# 4. Branch management
+echo "--- Local Branches ---"
+git branch
+echo ""
 
+read -p "Do you want to create a new branch? [y/N]: " create_branch
+if [[ "$create_branch" =~ ^[Yy]$ ]]; then
+    read -p "Enter new branch name: " new_branch
+    if [ -n "$new_branch" ]; then
+        git checkout -b "$new_branch"
+        CURRENT_BRANCH="$new_branch"
+        echo "✔ Switched to new branch: $CURRENT_BRANCH"
+    fi
+fi
 
+# 5. Push
+read -p "Push to branch [$CURRENT_BRANCH]: " target_branch
+target_branch=${target_branch:-$CURRENT_BRANCH}
 
-#select branch
-echo "Select  branch name ==========================="
-read branch
-git push -f origin "${branch}"
-echo -e "\n\n"
+# Check remote
+if ! git remote | grep -q "origin"; then
+    echo "No remote 'origin' found."
+    read -p "Enter remote repository URL to add: " remote_url
+    if [ -n "$remote_url" ]; then
+        git remote add origin "$remote_url"
+    fi
+fi
 
-
-# Completion
-echo "Git push completed = = = = = = = = = = = = = = = = = = = = = = = = =  "
-
+echo "Pushing to origin/$target_branch..."
+if git push -u origin "$target_branch"; then
+    echo ""
+    echo "✔ Git push completed successfully!"
+else
+    echo ""
+    echo "⚠️ Push failed. The remote branch may have newer changes."
+    read -p "Do you want to force push? (Caution: may overwrite remote commits) [y/N]: " force_push
+    if [[ "$force_push" =~ ^[Yy]$ ]]; then
+        git push -u origin "$target_branch" --force
+        echo "✔ Force push completed."
+    fi
+fi
+echo "==================================================="

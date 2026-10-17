@@ -1,6 +1,8 @@
-
 #!/bin/bash
-uvicorn app.main:app --reload
-
-
-
+# Starts FastAPI with Uvicorn live reload
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$SCRIPT_DIR/fapi" ]; then
+    "$SCRIPT_DIR/fapi" run "$@"
+else
+    uvicorn app.main:app --reload "$@"
+fi

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# ====== Virtual Environment Manager for Django ======
-# Usage: ./venv_manager.sh [command]
+# ====== Virtual Environment Manager ======
+# Usage: ./envrn [command]
 # Commands:
 #   create      - Create a new virtual environment
 #   activate    - Activate the virtual environment
@@ -23,10 +23,13 @@ case "$1" in
     
     activate)
         if [ -d "$VENV_DIR" ]; then
-            echo "Activating virtual environment..."
-            source "$VENV_DIR/bin/activate"
+            echo "To activate in your current shell, run:"
+            echo "  source $VENV_DIR/bin/activate"
+            echo ""
+            echo "Opening subshell with active venv (type 'exit' to exit)..."
+            bash --rcfile <(echo "source $VENV_DIR/bin/activate")
         else
-            echo "Virtual environment not found. Create it first using 'create'."
+            echo "Virtual environment not found. Create it first using './envrn create'."
         fi
         ;;
     

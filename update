@@ -1,2 +1,16 @@
 #!/bin/bash
-sudo apt-get update && sudo apt-get upgrade
+# System Update & Cleanup Tool
+echo "==================================================="
+echo "           🔄 SYSTEM UPDATE & CLEANUP              "
+echo "==================================================="
+echo "Updating package lists..."
+sudo apt-get update
+
+echo "Upgrading installed packages..."
+sudo apt-get upgrade -y
+
+echo "Cleaning up obsolete packages & cache..."
+sudo apt-get autoremove -y && sudo apt-get clean
+
+echo "✔ System update and cleanup completed successfully!"
+echo "==================================================="

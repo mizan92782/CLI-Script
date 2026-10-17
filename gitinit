@@ -1,68 +1,80 @@
 #!/bin/bash
 
-echo "========== Git Automation Script =========="
+# ==============================================================================
+# Git Repository Initializer (gitinit)
+# ==============================================================================
 
-# Show current git status
-echo "Checking git status..."
-git status
-echo ""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Initialize git repository if not already initialized
-if [ ! -d ".git" ]; then
-    echo "Initializing git repository..."
-    git init
-    echo ""
+echo "==================================================="
+echo "          🚀 GIT REPOSITORY INITIALIZER            "
+echo "==================================================="
+
+# If already initialized, delegate to gitpush
+if [ -d ".git" ]; then
+    echo "ℹ Git repository already initialized in $(pwd)."
+    read -p "Do you want to stage, commit, and push changes now? [Y/n]: " proceed_push
+    if [[ "$proceed_push" =~ ^[Yy]$ || -z "$proceed_push" ]]; then
+        bash "$SCRIPT_DIR/gitpush" "$@"
+    fi
+    exit 0
 fi
 
-# Show existing branches
-echo "Existing branches:"
-git branch
-echo ""
+# 1. Initialize
+echo "Initializing new Git repository..."
+git init
+git branch -M main
+echo "✔ Default branch set to 'main'."
 
-# Option to create a new branch
-echo -n "Do you want to create a new branch? (y/n): "
-read create_branch
+# 2. Add default .gitignore if not present
+if [ ! -f ".gitignore" ]; then
+    echo "Creating basic .gitignore..."
+    cat << 'EOF' > .gitignore
+# Environment & Secrets
+.env
+.env.*
+*.local
 
-if [[ "$create_branch" == "y" || "$create_branch" == "Y" ]]; then
-    echo -n "Enter new branch name: "
-    read new_branch
-    git branch "$new_branch"
-    echo "Branch '$new_branch' created."
-    echo ""
+# Python
+__pycache__/
+*.py[cod]
+venv/
+env/
+*.log
+
+# System & IDE
+.DS_Store
+.idea/
+.vscode/
+EOF
+    echo "✔ Default .gitignore created."
 fi
 
-# Switch branch
-echo -n "Enter branch name to switch to: "
-read branch
-git checkout "$branch"
-echo "Switched to branch '$branch'"
-echo ""
-
-# Stage all changes
-echo "Adding all changes..."
+# 3. Stage & Commit
+echo "Staging all files..."
 git add -A
-echo ""
 
-# Commit changes
-echo -n "Enter commit message: "
-read mycommit
-git commit -m "${mycommit}"
-echo "Commit successful!"
-echo ""
+read -p "Enter initial commit message (Default: 'Initial commit'): " init_msg
+init_msg=${init_msg:-"Initial commit"}
+git commit -m "$init_msg"
+echo "✔ Initial commit created."
 
-# Add remote repository if not already added
-remote_exists=$(git remote)
-if [ -z "$remote_exists" ]; then
-    echo -n "Enter repository link to add remote: "
-    read link
-    git remote add origin "$link"
-    echo "Remote repository added: $link"
-    echo ""
+# 4. Optional Remote setup
+echo ""
+read -p "Do you have a remote Git URL to link now? (e.g. GitHub/GitLab) [y/N]: " has_remote
+if [[ "$has_remote" =~ ^[Yy]$ ]]; then
+    read -p "Enter remote repository URL: " remote_url
+    if [ -n "$remote_url" ]; then
+        git remote add origin "$remote_url"
+        echo "✔ Remote 'origin' linked: $remote_url"
+        read -p "Push initial commit to origin/main now? [Y/n]: " push_now
+        if [[ "$push_now" =~ ^[Yy]$ || -z "$push_now" ]]; then
+            git push -u origin main
+            echo "✔ Initial push complete!"
+        fi
+    fi
 fi
 
-# Push to the branch
-echo "Pushing changes to branch '$branch'..."
-git push -u origin "$branch"
-echo "Push completed successfully!"
-echo "==========================================="
-
+echo "==================================================="
+echo "🎉 Git repository setup complete!"
+echo "==================================================="

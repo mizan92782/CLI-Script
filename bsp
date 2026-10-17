@@ -1,3 +1,10 @@
 #!/bin/bash
+# Make script(s) executable
+if [ -z "$1" ]; then
+    echo "Usage: ./bsp <file1> [file2...]"
+    echo "Example: ./bsp script.sh"
+    exit 1
+fi
 
-chmod +x "${1}"
+chmod +x "$@"
+echo "✔ Made executable: $*"

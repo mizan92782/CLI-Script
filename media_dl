@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# ==============================================================================
+# Unified Media Downloader (Audio MP3 & Video MP4)
+# ==============================================================================
+
+show_help() {
+    echo "==================================================="
+    echo "          🎬 UNIFIED MEDIA DOWNLOADER (yt-dlp)     "
+    echo "==================================================="
+    echo "Usage: ./media_dl [options] <URL>"
+    echo ""
+    echo "Options:"
+    echo "  -a, --audio       Download as high-quality MP3"
+    echo "  -v, --video       Download as MP4 (prompts for resolution)"
+    echo "  -b, --best        Download best quality video without prompting"
+    echo "  -o, --output DIR  Specify destination directory (Default: ~/Downloads)"
+    echo "  -h, --help        Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  ./media_dl -a https://youtube.com/watch?v=..."
+    echo "  ./media_dl -v https://youtube.com/watch?v=..."
+    echo "==================================================="
+}
+
+if [ -z "$1" ] || [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    show_help
+    exit 0
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MODE="video"
+OUT_DIR="$HOME/Downloads"
+
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        -a|--audio) MODE="audio"; shift ;;
+        -v|--video) MODE="video"; shift ;;
+        -b|--best) MODE="best"; shift ;;
+        -o|--output) OUT_DIR="$2"; shift 2 ;;
+        http*|www*) URL="$1"; shift ;;
+        *) URL="$1"; shift ;;
+    esac
+done
+
+if [ -z "$URL" ]; then
+    echo "Error: No URL provided."
+    show_help
+    exit 1
+fi
+
+if [ "$MODE" == "audio" ]; then
+    bash "$SCRIPT_DIR/audio" "$URL" "$OUT_DIR"
+elif [ "$MODE" == "best" ]; then
+    mkdir -p "$OUT_DIR"
+    yt-dlp --no-playlist -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "$OUT_DIR/%(title)s.%(ext)s" "$URL"
+else
+    bash "$SCRIPT_DIR/video" "$URL" "$OUT_DIR"
+fi

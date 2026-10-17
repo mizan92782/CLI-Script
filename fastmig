@@ -1,5 +1,9 @@
 #!/bin/bash
-
-aerich init-db
-aerich migrate
-aerich upgrade
+# Runs Aerich Tortoise-ORM migrations
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -x "$SCRIPT_DIR/fapi" ]; then
+    "$SCRIPT_DIR/fapi" migrate "$@"
+else
+    aerich migrate
+    aerich upgrade
+fi

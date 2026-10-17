@@ -1,10 +1,38 @@
 #!/bin/bash
 
+# ==============================================================================
+# YouTube Audio Downloader (MP3)
+# ==============================================================================
+
 if [ -z "$1" ]; then
-    echo 'Usage: audio "YouTube-URL"'
+    echo "Usage: ./audio <YouTube-URL> [output_directory]"
+    echo "Example: ./audio https://www.youtube.com/watch?v=xxxx"
     exit 1
 fi
 
-URL="$1"
+# Ensure yt-dlp is installed
+if ! command -v yt-dlp &> /dev/null; then
+    echo "❌ yt-dlp is not installed!"
+    echo "Install via: sudo apt install -y yt-dlp  OR  pip install yt-dlp"
+    exit 1
+fi
 
-yt-dlp --no-playlist -f "bestaudio/best" -x --audio-format mp3 --audio-quality 0 -o "$HOME/Downloads/%(title)s.%(ext)s" "$URL"
+# Ensure ffmpeg is installed for MP3 extraction
+if ! command -v ffmpeg &> /dev/null; then
+    echo "⚠️ ffmpeg is required for MP3 conversion. Installing or run: sudo apt install -y ffmpeg"
+fi
+
+URL="$1"
+OUT_DIR="${2:-$HOME/Downloads}"
+mkdir -p "$OUT_DIR"
+
+echo "🎵 Downloading highest quality audio to $OUT_DIR..."
+yt-dlp --no-playlist \
+    -f "bestaudio/best" \
+    -x \
+    --audio-format mp3 \
+    --audio-quality 0 \
+    -o "$OUT_DIR/%(title)s.%(ext)s" \
+    "$URL"
+
+echo "✔ Audio download complete!"

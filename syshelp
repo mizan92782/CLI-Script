@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# ==============================================================================
+# Unified Linux & DevOps Cheat Sheet & System Helper (syshelp)
+# ==============================================================================
+
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+show_menu() {
+    clear
+    echo -e "${CYAN}===================================================${NC}"
+    echo -e "${CYAN}        🐧 LINUX & DEVOPS COMMAND NAVIGATOR        ${NC}"
+    echo -e "${CYAN}===================================================${NC}"
+    echo "Select a cheat sheet topic to view:"
+    echo ""
+    echo "  1) 🐳 Docker & Containers         (docker_help)"
+    echo "  2) 📁 File & Directory Management (file_help)"
+    echo "  3) 🌐 Network & IP Configuration  (net_help)"
+    echo "  4) 🔌 Port & Listening Services   (port_help)"
+    echo "  5) ⚙️ Process & System Monitoring  (ps_help)"
+    echo "  6) 📦 Package Management (APT)     (package_help)"
+    echo "  7) 🔒 Permissions & Ownership     (permissions_help)"
+    echo "  8) 🚀 Systemd & Services          (systemctl_help)"
+    echo "  9) 👤 User & Group Administration (user_help)"
+    echo ""
+    echo "  0) Exit"
+    echo -e "${CYAN}===================================================${NC}"
+}
+
+# Direct argument shortcut handling
+case "$1" in
+    docker|dock)
+        bash "$SCRIPT_DIR/docker_help"; exit 0 ;;
+    file|dir|files)
+        bash "$SCRIPT_DIR/file_help"; exit 0 ;;
+    net|network|ip)
+        bash "$SCRIPT_DIR/net_help"; exit 0 ;;
+    port|ports)
+        bash "$SCRIPT_DIR/port_help"; exit 0 ;;
+    ps|process|proc)
+        bash "$SCRIPT_DIR/ps_help"; exit 0 ;;
+    pkg|package|apt)
+        bash "$SCRIPT_DIR/package_help"; exit 0 ;;
+    perm|permission|chmod)
+        bash "$SCRIPT_DIR/permissions_help"; exit 0 ;;
+    sys|systemctl|service)
+        bash "$SCRIPT_DIR/systemctl_help"; exit 0 ;;
+    user|users|group)
+        bash "$SCRIPT_DIR/user_help"; exit 0 ;;
+    --help|-h)
+        echo "Usage: ./syshelp [topic]"
+        echo "Topics: docker, file, net, port, ps, pkg, perm, sys, user"
+        exit 0 ;;
+esac
+
+while true; do
+    show_menu
+    read -p "Enter choice [0-9]: " choice
+    echo ""
+
+    case "$choice" in
+        1) bash "$SCRIPT_DIR/docker_help" ;;
+        2) bash "$SCRIPT_DIR/file_help" ;;
+        3) bash "$SCRIPT_DIR/net_help" ;;
+        4) bash "$SCRIPT_DIR/port_help" ;;
+        5) bash "$SCRIPT_DIR/ps_help" ;;
+        6) bash "$SCRIPT_DIR/package_help" ;;
+        7) bash "$SCRIPT_DIR/permissions_help" ;;
+        8) bash "$SCRIPT_DIR/systemctl_help" ;;
+        9) bash "$SCRIPT_DIR/user_help" ;;
+        0) echo "Goodbye!"; exit 0 ;;
+        *) echo "Invalid choice." ;;
+    esac
+
+    echo ""
+    read -p "Press Enter to return to menu..." _
+done

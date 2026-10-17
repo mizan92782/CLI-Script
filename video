@@ -1,11 +1,25 @@
 #!/bin/bash
 
+# ==============================================================================
+# YouTube Video Downloader (MP4 with Quality Selection)
+# ==============================================================================
+
 if [ -z "$1" ]; then
-    echo 'Usage: video "YouTube-URL"'
+    echo "Usage: ./video <YouTube-URL> [output_directory]"
+    echo "Example: ./video https://www.youtube.com/watch?v=xxxx"
+    exit 1
+fi
+
+# Check yt-dlp
+if ! command -v yt-dlp &> /dev/null; then
+    echo "❌ yt-dlp is not installed!"
+    echo "Install via: sudo apt install -y yt-dlp  OR  pip install yt-dlp"
     exit 1
 fi
 
 URL="$1"
+OUT_DIR="${2:-$HOME/Downloads}"
+mkdir -p "$OUT_DIR"
 
 echo "Select video quality:"
 echo "1) 360p"
@@ -14,8 +28,8 @@ echo "3) 720p HD"
 echo "4) 1080p Full HD"
 echo "5) 1440p 2K"
 echo "6) Best available"
-
-read -p "Enter choice [1-6]: " choice
+read -p "Enter choice [1-6] (Default: 6): " choice
+choice=${choice:-6}
 
 case $choice in
     1) HEIGHT=360 ;;
@@ -24,23 +38,28 @@ case $choice in
     4) HEIGHT=1080 ;;
     5) HEIGHT=1440 ;;
     6)
+        echo "🎬 Downloading best available quality to $OUT_DIR..."
         yt-dlp \
             --no-playlist \
             -f "bestvideo+bestaudio/best" \
             --merge-output-format mp4 \
-            -o "$HOME/Downloads/%(title)s.%(ext)s" \
+            -o "$OUT_DIR/%(title)s.%(ext)s" \
             "$URL"
-        exit
+        echo "✔ Download complete!"
+        exit 0
         ;;
     *)
-        echo "Invalid choice."
+        echo "Invalid choice. Aborting."
         exit 1
         ;;
 esac
 
+echo "🎬 Downloading ${HEIGHT}p video to $OUT_DIR..."
 yt-dlp \
     --no-playlist \
     -f "bestvideo[height<=${HEIGHT}]+bestaudio/best[height<=${HEIGHT}]" \
     --merge-output-format mp4 \
-    -o "$HOME/Downloads/%(title)s.%(ext)s" \
+    -o "$OUT_DIR/%(title)s.%(ext)s" \
     "$URL"
+
+echo "✔ Video download complete!"
