@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo 'Usage: audio "YouTube-URL"'
+    exit 1
+fi
+
+URL="$1"
+
+yt-dlp --no-playlist -f "bestaudio/best" -x --audio-format mp3 --audio-quality 0 -o "$HOME/Downloads/%(title)s.%(ext)s" "$URL"

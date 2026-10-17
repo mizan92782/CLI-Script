@@ -52,10 +52,6 @@ if [ "$1" == "help" ]; then
 fi
 
 
-# add requirement file
-echo "UPDATE REQUIREMENT FILE ======================="
-pip freeze > requirements.txt
-echo -e "\n\n"
 
 # git status
 echo "GIT STATUS ================================="

@@ -1,0 +1,186 @@
+#!/bin/bash
+
+help() {
+cat << 'EOF'
+
+===============================
+🚀 DOCKER & DOCKER COMPOSE HELP
+===============================
+
+--------------------------------
+📦 BASIC DOCKER COMMANDS
+--------------------------------
+docker --version                  # Docker version
+docker info                       # System-wide info
+docker help                       # Docker help
+
+--------------------------------
+📦 IMAGES
+--------------------------------
+docker images                     # List images
+docker pull IMAGE_NAME            # Pull image
+docker build -t NAME .            # Build image
+docker rmi IMAGE_ID               # Remove image
+docker image prune                # Remove unused images
+docker inspect IMAGE_NAME         # Image details
+
+--------------------------------
+📦 CONTAINERS
+--------------------------------
+docker ps                         # Running containers
+docker ps -a                      # All containers
+docker run IMAGE                  # Run container
+docker run -d IMAGE               # Run detached
+docker run -it IMAGE bash         # Interactive shell
+docker stop CONTAINER             # Stop container
+docker start CONTAINER            # Start container
+docker restart CONTAINER          # Restart container
+docker rm CONTAINER               # Remove container
+docker container prune            # Remove stopped containers
+
+--------------------------------
+📦 EXEC & FILE SYSTEM
+--------------------------------
+docker exec -it CONTAINER bash    # Enter running container
+docker exec CONTAINER ls /        # Run command inside container
+docker cp CONTAINER:/path ./local # Copy from container
+docker cp ./local CONTAINER:/path # Copy to container
+
+--------------------------------
+📦 LOGS
+--------------------------------
+docker logs CONTAINER             # Full logs
+docker logs -f CONTAINER          # Live logs
+docker logs --tail 100 CONTAINER  # Last 100 lines
+
+--------------------------------
+📦 NETWORK
+--------------------------------
+docker network ls
+docker network inspect NETWORK
+docker network rm NETWORK
+
+--------------------------------
+📦 VOLUME
+--------------------------------
+docker volume ls
+docker volume inspect VOLUME
+docker volume rm VOLUME
+docker volume prune
+
+--------------------------------
+📦 SYSTEM CLEANUP
+--------------------------------
+docker system df                  # Disk usage
+docker system prune               # Remove unused data
+docker system prune -a            # Remove all unused
+
+================================
+🐳 DOCKER COMPOSE COMMANDS
+================================
+
+--------------------------------
+▶ RUN / STOP ALL CONTAINERS
+--------------------------------
+docker-compose up                 # Run all containers
+docker-compose up -d              # Run in background
+docker-compose down               # Stop & remove
+docker-compose stop               # Stop only
+docker-compose start              # Start stopped
+docker-compose restart            # Restart all
+
+--------------------------------
+▶ INDIVIDUAL SERVICE
+--------------------------------
+docker-compose up SERVICE         # Run one service
+docker-compose stop SERVICE       # Stop one service
+docker-compose start SERVICE      # Start one service
+docker-compose restart SERVICE    # Restart one service
+docker-compose rm SERVICE         # Remove service
+
+--------------------------------
+▶ LOGS
+--------------------------------
+docker-compose logs               # All logs
+docker-compose logs -f            # Live logs
+docker-compose logs SERVICE       # Specific service
+
+--------------------------------
+▶ STATUS & EXEC
+--------------------------------
+docker-compose ps                 # Service status
+docker-compose exec SERVICE bash  # Enter service
+docker-compose config             # Validate config
+
+--------------------------------
+▶ BUILD
+--------------------------------
+docker-compose build              # Build all
+docker-compose build SERVICE      # Build one
+docker-compose pull               # Pull images
+
+================================
+🛠 COMMON PROBLEMS & SOLUTIONS
+================================
+
+❌ Port already in use
+✔ Fix:
+sudo lsof -i :PORT
+docker stop CONTAINER
+
+--------------------------------
+❌ Container exits immediately
+✔ Fix:
+docker logs CONTAINER
+docker exec -it CONTAINER bash
+
+--------------------------------
+❌ Permission denied
+✔ Fix:
+sudo usermod -aG docker $USER
+newgrp docker
+
+--------------------------------
+❌ Disk full
+✔ Fix:
+docker system prune -a
+docker volume prune
+
+--------------------------------
+❌ Changes not reflected
+✔ Fix:
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+
+--------------------------------
+❌ Cannot connect to service
+✔ Fix:
+docker ps
+docker-compose ps
+Check ports in docker-compose.yml
+
+================================
+📌 TIPS
+================================
+✔ Use .dockerignore
+✔ Use multi-stage builds
+✔ Keep images small
+✔ Always check logs first
+
+================================
+END OF DOCKER HELP
+================================
+
+EOF
+}
+
+case "$1" in
+  help)
+    help
+    ;;
+  *)
+    echo "Usage: ./docker-help.sh help"
+    ;;
+esac
+

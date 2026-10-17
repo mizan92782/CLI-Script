@@ -1,0 +1,46 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo 'Usage: video "YouTube-URL"'
+    exit 1
+fi
+
+URL="$1"
+
+echo "Select video quality:"
+echo "1) 360p"
+echo "2) 480p"
+echo "3) 720p HD"
+echo "4) 1080p Full HD"
+echo "5) 1440p 2K"
+echo "6) Best available"
+
+read -p "Enter choice [1-6]: " choice
+
+case $choice in
+    1) HEIGHT=360 ;;
+    2) HEIGHT=480 ;;
+    3) HEIGHT=720 ;;
+    4) HEIGHT=1080 ;;
+    5) HEIGHT=1440 ;;
+    6)
+        yt-dlp \
+            --no-playlist \
+            -f "bestvideo+bestaudio/best" \
+            --merge-output-format mp4 \
+            -o "$HOME/Downloads/%(title)s.%(ext)s" \
+            "$URL"
+        exit
+        ;;
+    *)
+        echo "Invalid choice."
+        exit 1
+        ;;
+esac
+
+yt-dlp \
+    --no-playlist \
+    -f "bestvideo[height<=${HEIGHT}]+bestaudio/best[height<=${HEIGHT}]" \
+    --merge-output-format mp4 \
+    -o "$HOME/Downloads/%(title)s.%(ext)s" \
+    "$URL"

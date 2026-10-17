@@ -1,0 +1,866 @@
+#!/bin/bash
+
+# ==============================================================================
+# Django & DRF Production/Development Automation Setup Script
+# Description: Automates virtualenv, dependency installation, Django project
+#              creation, .gitignore, Dockerfile, entrypoint, docker-compose
+#              (dev & prod), .env, and Nginx reverse proxy setup.
+# ==============================================================================
+
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# --- Color Codes for Pretty Output ---
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+PURPLE='\033[0;35m'
+BOLD='\033[1m'
+NC='\033[0m' # No Color
+
+# Show help if requested
+if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo -e "${CYAN}================ Django Automation Initializer ================${NC}"
+    echo "Usage: ./djinit [project_name]"
+    echo ""
+    echo "Automates end-to-end setup of Django + DRF projects:"
+    echo "  1. Checks python3 & python3-venv prerequisites"
+    echo "  2. Creates and activates virtual environment (venv)"
+    echo "  3. Installs Django, DRF, JWT, CORS, dateutil/pytz, Postgres, Whitenoise, Gunicorn"
+    echo "  4. Generates requirements.txt"
+    echo "  5. Creates Django project with startproject"
+    echo "  6. Sets up .env with auto-generated secure SECRET_KEY and .env.example"
+    echo "  7. Configures settings.py and urls.py with OpenAPI Swagger & JWT endpoints"
+    echo "  8. Creates .gitignore and .dockerignore"
+    echo "  9. Creates Dockerfile and entrypoint.sh (auto-migration & static collection)"
+    echo " 10. Creates docker-compose-dev.yml and docker-compose-prod.yml"
+    echo " 11. Creates nginx/nginx.conf reverse proxy and dev.sh / prod.sh runners"
+    echo ""
+    echo "Examples:"
+    echo "  ./djinit                  # Interactive setup"
+    echo "  ./djinit my_api_service   # Automated setup with specified name"
+    echo -e "${CYAN}================================================================${NC}"
+    exit 0
+fi
+
+# Print Banner
+echo -e "${CYAN}"
+echo "======================================================================"
+echo "    🚀 DJANGO & DRF AUTOMATED SERVER & DEV ENVIRONMENT INITIALIZER   "
+echo "======================================================================"
+echo -e "${NC}"
+
+# --- Helper Functions ---
+log_step() {
+    echo -e "\n${BOLD}${BLUE}==>${NC} ${PURPLE}$1${NC}"
+}
+
+log_success() {
+    echo -e "${GREEN}✔ $1${NC}"
+}
+
+log_info() {
+    echo -e "${CYAN}ℹ $1${NC}"
+}
+
+log_warn() {
+    echo -e "${YELLOW}⚠ $1${NC}"
+}
+
+log_error() {
+    echo -e "${RED}✖ $1${NC}"
+}
+
+# --- Step 0: Check System Requirements ---
+log_step "[0/8] Checking system prerequisites..."
+
+if ! command -v python3 &> /dev/null; then
+    log_error "Python 3 is not installed! Please install python3 first."
+    echo "Ubuntu/Debian: sudo apt update && sudo apt install -y python3 python3-pip python3-venv"
+    exit 1
+fi
+
+PYTHON_VERSION=$(python3 --version 2>&1)
+log_success "Found Python: $PYTHON_VERSION"
+
+# Test if python3-venv module is present
+if ! python3 -m venv --help &> /dev/null; then
+    log_warn "python3-venv module is missing. Attempting to install if sudo is available..."
+    if command -v apt-get &> /dev/null && [ "$EUID" -eq 0 ]; then
+        apt-get update && apt-get install -y python3-venv python3-pip
+    elif command -v sudo &> /dev/null; then
+        echo "Please run: sudo apt update && sudo apt install -y python3-venv python3-pip"
+        read -p "Install python3-venv now via sudo? [Y/n]: " install_venv
+        if [[ "$install_venv" =~ ^[Yy]$ || -z "$install_venv" ]]; then
+            sudo apt update && sudo apt install -y python3-venv python3-pip
+        else
+            log_error "python3-venv is required. Aborting."
+            exit 1
+        fi
+    else
+        log_error "python3-venv is required. Please install it with your package manager."
+        exit 1
+    fi
+fi
+
+# --- Project Name Selection ---
+echo ""
+if [ -n "$1" ]; then
+    PROJECT_NAME="$1"
+    log_info "Using project name provided via argument: $PROJECT_NAME"
+else
+    while true; do
+        read -p "Enter your Django Project Name (e.g. core, myproject, api_backend): " PROJECT_NAME
+        # Trim whitespace
+        PROJECT_NAME="$(echo -e "${PROJECT_NAME}" | tr -d '[:space:]')"
+        
+        if [[ -z "$PROJECT_NAME" ]]; then
+            log_warn "Project name cannot be empty."
+            continue
+        fi
+
+        # Validate valid python identifier (letters, digits, underscores, doesn't start with digit)
+        if [[ "$PROJECT_NAME" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+            # Check for reserved names
+            if [[ "$PROJECT_NAME" == "django" || "$PROJECT_NAME" == "test" || "$PROJECT_NAME" == "site" ]]; then
+                log_warn "'$PROJECT_NAME' is a reserved Python/Django module name. Choose another."
+                continue
+            fi
+            break
+        else
+            log_warn "Invalid name. Use only letters, numbers, and underscores (cannot start with a number)."
+        fi
+    done
+fi
+
+# Folder destination choice
+echo ""
+echo "Select installation target directory:"
+echo "  1) Create in a new folder './$PROJECT_NAME' (Recommended)"
+echo "  2) Create directly inside the current directory ($(pwd))"
+read -p "Choose [1/2] (Default: 1): " DIR_CHOICE
+DIR_CHOICE=${DIR_CHOICE:-1}
+
+if [ "$DIR_CHOICE" == "1" ]; then
+    if [ -d "$PROJECT_NAME" ]; then
+        log_warn "Directory '$PROJECT_NAME' already exists."
+        read -p "Do you want to proceed inside it? [y/N]: " proceed_existing
+        if [[ ! "$proceed_existing" =~ ^[Yy]$ ]]; then
+            echo "Aborted by user."
+            exit 0
+        fi
+    else
+        mkdir -p "$PROJECT_NAME"
+    fi
+    cd "$PROJECT_NAME"
+    log_info "Working directory set to: $(pwd)"
+fi
+
+# --- Step 1: Create Virtual Environment ---
+log_step "[1/8] Creating virtual environment 'venv'..."
+if [ -d "venv" ]; then
+    log_warn "Virtual environment 'venv' already exists. Skipping creation."
+else
+    python3 -m venv venv
+    log_success "Virtual environment created at: $(pwd)/venv"
+fi
+
+# --- Step 2: Activate Virtual Environment ---
+log_step "[2/8] Activating virtual environment..."
+# shellcheck disable=SC1091
+source venv/bin/activate
+
+if [ -n "$VIRTUAL_ENV" ]; then
+    log_success "Virtual environment activated successfully: $VIRTUAL_ENV"
+else
+    log_error "Failed to activate virtual environment."
+    exit 1
+fi
+
+# Upgrade pip inside venv
+log_info "Upgrading pip, setuptools, and wheel..."
+pip install --upgrade pip setuptools wheel > /dev/null 2>&1
+
+# --- Step 3: Install Essential Django & DRF Dependencies ---
+log_step "[3/8] Installing Django, DRF, Datetime, and Production Dependencies..."
+
+# Curated list of required packages:
+# - Django & REST framework
+# - JWT authentication
+# - Datetime utilities (python-dateutil, pytz)
+# - Database driver (psycopg2-binary)
+# - Security & CORS (django-cors-headers, django-filter)
+# - API Documentation (drf-spectacular for modern OpenAPI 3 / Swagger)
+# - Environment variable loading (python-dotenv, django-environ)
+# - Production servers & assets (gunicorn, whitenoise)
+# - Media handling (pillow)
+PACKAGES=(
+    "django>=5.0,<6.0"
+    "djangorestframework>=3.14.0"
+    "djangorestframework-simplejwt>=5.3.0"
+    "django-cors-headers>=4.3.0"
+    "django-filter>=24.0"
+    "drf-spectacular>=0.27.0"
+    "python-dateutil>=2.8.2"
+    "pytz>=2024.1"
+    "psycopg2-binary>=2.9.9"
+    "python-dotenv>=1.0.0"
+    "django-environ>=0.11.0"
+    "gunicorn>=21.2.0"
+    "whitenoise>=6.6.0"
+    "pillow>=10.2.0"
+    "requests>=2.31.0"
+)
+
+echo -e "${CYAN}Packages to install:${NC}"
+for pkg in "${PACKAGES[@]}"; do
+    echo "  - $pkg"
+done
+echo ""
+
+pip install "${PACKAGES[@]}"
+log_success "All dependencies installed successfully into virtualenv!"
+
+# Freeze requirements to requirements.txt
+log_info "Generating requirements.txt..."
+cat << 'EOF' > requirements.txt
+# Core Framework & REST API
+Django>=5.0,<6.0
+djangorestframework>=3.14.0
+djangorestframework-simplejwt>=5.3.0
+
+# CORS & Filtering
+django-cors-headers>=4.3.0
+django-filter>=24.0
+
+# API Documentation (Swagger / OpenAPI 3)
+drf-spectacular>=0.27.0
+
+# Datetime & Timezones
+python-dateutil>=2.8.2
+pytz>=2024.1
+
+# Database (PostgreSQL)
+psycopg2-binary>=2.9.9
+
+# Environment Variables
+python-dotenv>=1.0.0
+django-environ>=0.11.0
+
+# Production Server & Static Files
+gunicorn>=21.2.0
+whitenoise>=6.6.0
+
+# Media & Utilities
+pillow>=10.2.0
+requests>=2.31.0
+EOF
+log_success "requirements.txt generated."
+
+# --- Step 4: Create Django Project ---
+log_step "[4/8] Initializing Django project '$PROJECT_NAME'..."
+
+if [ -f "manage.py" ]; then
+    log_warn "manage.py already exists in current folder. Skipping django-admin startproject."
+else
+    django-admin startproject "$PROJECT_NAME" .
+    log_success "Django project '$PROJECT_NAME' created with root manage.py!"
+fi
+
+# Create standard directories
+mkdir -p static media templates apps
+
+# --- Step 5: Create .env and .env.example ---
+log_step "[5/8] Creating .env and .env.example with secure defaults..."
+
+# Generate a cryptographically secure random SECRET_KEY using python
+GENERATED_SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
+
+cat << EOF > .env
+# Django Settings
+DEBUG=True
+SECRET_KEY=${GENERATED_SECRET_KEY}
+ALLOWED_HOSTS=*
+
+# Database Configuration (PostgreSQL)
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=django_db
+DB_USER=django_user
+DB_PASSWORD=django_password
+DB_HOST=db
+DB_PORT=5432
+
+# CORS Settings
+CORS_ALLOW_ALL_ORIGINS=True
+
+# Static & Media
+STATIC_URL=/static/
+MEDIA_URL=/media/
+EOF
+
+cat << 'EOF' > .env.example
+# Django Settings
+DEBUG=True
+SECRET_KEY=change-this-in-production-to-a-very-secure-random-key
+ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com
+
+# Database Configuration (PostgreSQL)
+DB_ENGINE=django.db.backends.postgresql
+DB_NAME=django_db
+DB_USER=django_user
+DB_PASSWORD=django_password
+DB_HOST=db
+DB_PORT=5432
+
+# CORS Settings
+CORS_ALLOW_ALL_ORIGINS=False
+
+# Static & Media
+STATIC_URL=/static/
+MEDIA_URL=/media/
+EOF
+
+log_success ".env and .env.example created (with auto-generated secure SECRET_KEY)."
+
+# Enhance settings.py to load .env, whitenoise, cors, and DRF
+if [ -f "$PROJECT_NAME/settings.py" ]; then
+    if ! grep -q "django-environ" "$PROJECT_NAME/settings.py" 2>/dev/null; then
+        log_info "Configuring $PROJECT_NAME/settings.py for .env, DRF, Whitenoise, and CORS..."
+        cat << 'EOF' >> "$PROJECT_NAME/settings.py"
+
+# ==============================================================================
+# AUTOMATIC EXTENSIONS (Added by djinit setup script)
+# ==============================================================================
+import os
+from pathlib import Path
+import environ
+
+# Initialize environ
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+# Read .env file if it exists
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# Override settings from .env
+DEBUG = env('DEBUG', default=True)
+SECRET_KEY = env('SECRET_KEY', default=SECRET_KEY)
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
+
+# Insert CorsHeaders & Whitenoise into Middleware
+if 'corsheaders.middleware.CorsMiddleware' not in MIDDLEWARE:
+    MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    # Insert right after SecurityMiddleware
+    try:
+        sec_idx = MIDDLEWARE.index('django.security.SecurityMiddleware')
+        MIDDLEWARE.insert(sec_idx + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    except ValueError:
+        MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
+# Add required installed apps
+ADDITIONAL_APPS = [
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'django_filters',
+    'drf_spectacular',
+]
+
+for app in ADDITIONAL_APPS:
+    if app not in INSTALLED_APPS:
+        INSTALLED_APPS.append(app)
+
+# Database Configuration from .env
+if os.environ.get('DB_NAME'):
+    DATABASES['default'] = {
+        'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': env('DB_NAME', default='django_db'),
+        'USER': env('DB_USER', default='django_user'),
+        'PASSWORD': env('DB_PASSWORD', default='django_password'),
+        'HOST': env('DB_HOST', default='db'),
+        'PORT': env('DB_PORT', default='5432'),
+    }
+
+# REST Framework Defaults
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ],
+}
+
+# Spectacular Swagger Settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Django API',
+    'DESCRIPTION': 'REST API built with Django and DRF',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = env.bool('CORS_ALLOW_ALL_ORIGINS', default=True)
+
+# Static and Media files
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+EOF
+        log_success "settings.py updated with production-ready settings."
+    fi
+fi
+
+# Configure urls.py with Swagger and JWT Authentication routes
+if [ -f "$PROJECT_NAME/urls.py" ]; then
+    log_info "Configuring $PROJECT_NAME/urls.py with Swagger & JWT endpoints..."
+    cat << 'EOF' > "$PROJECT_NAME/urls.py"
+from django.contrib import admin
+from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+
+    # OpenAPI 3 / Swagger Documentation
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+
+    # JWT Authentication Endpoints
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+EOF
+    log_success "urls.py updated with Swagger docs (/api/docs/) and JWT routes (/api/token/)."
+fi
+
+# --- Step 6: Create .gitignore and .dockerignore ---
+log_step "[6/8] Creating .gitignore and .dockerignore..."
+
+cat << 'EOF' > .gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment
+.env
+.env.local
+
+# Docker
+docker-compose.override.yml
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+*.swp
+*.swo
+EOF
+
+cat << 'EOF' > .dockerignore
+.git
+.gitignore
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+*.md
+docker-compose*.yml
+Dockerfile*
+staticfiles/
+media/
+.env
+EOF
+
+log_success ".gitignore and .dockerignore created."
+
+# --- Step 7: Create Dockerfile and entrypoint.sh ---
+log_step "[7/8] Creating Dockerfile and entrypoint.sh..."
+
+cat << 'EOF' > Dockerfile
+# Base Image: Official Python 3.12 Slim
+FROM python:3.12-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies needed for psycopg2, curl, build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install python dependencies
+RUN pip install --upgrade pip
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application files
+COPY . /app/
+
+# Copy and set entrypoint permissions
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose standard port
+EXPOSE 8000
+
+# Default entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command for development (overridden in prod compose)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+EOF
+
+cat << 'EOF' > entrypoint.sh
+#!/bin/sh
+
+# ==============================================================================
+# Django Docker Container Entrypoint
+# Handles database connectivity wait, migrations, and static file collection
+# ==============================================================================
+
+set -e
+
+if [ "$DB_ENGINE" = "django.db.backends.postgresql" ] || [ "$DB_HOST" = "db" ]; then
+    echo "⏳ Waiting for PostgreSQL at $DB_HOST:${DB_PORT:-5432}..."
+
+    python - << 'WAIT_FOR_DB'
+import socket, sys, time, os
+host = os.environ.get('DB_HOST', 'db')
+port = int(os.environ.get('DB_PORT', 5432))
+while True:
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            break
+    except OSError:
+        time.sleep(0.5)
+WAIT_FOR_DB
+
+    echo "✅ PostgreSQL is up and ready for connections!"
+fi
+
+# Run database migrations
+echo "🔄 Running database migrations..."
+python manage.py makemigrations --noinput
+python manage.py migrate --noinput
+
+# Collect static files in production or when STATIC_ROOT is configured
+if [ "$DEBUG" = "False" ] || [ "$COLLECT_STATIC" = "1" ]; then
+    echo "📦 Collecting static files..."
+    python manage.py collectstatic --noinput --clear
+fi
+
+echo "🚀 Starting server..."
+exec "$@"
+EOF
+
+chmod +x entrypoint.sh
+log_success "Dockerfile and executable entrypoint.sh created."
+
+# --- Step 8: Create docker-compose-dev.yml, docker-compose-prod.yml & Nginx ---
+log_step "[8/8] Creating docker-compose files and Nginx reverse proxy configuration..."
+
+# 8.1: Development Docker Compose
+cat << EOF > docker-compose-dev.yml
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ${PROJECT_NAME}_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: \${DB_NAME:-django_db}
+      POSTGRES_USER: \${DB_USER:-django_user}
+      POSTGRES_PASSWORD: \${DB_PASSWORD:-django_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \${DB_USER:-django_user} -d \${DB_NAME:-django_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME}_redis_dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}_web_dev
+    command: python manage.py runserver 0.0.0.0:8000
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=True
+      - DB_HOST=db
+      - DB_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+volumes:
+  postgres_dev_data:
+EOF
+
+# 8.2: Production Docker Compose
+cat << EOF > docker-compose-prod.yml
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: ${PROJECT_NAME}_db_prod
+    restart: always
+    environment:
+      POSTGRES_DB: \${DB_NAME:-django_db}
+      POSTGRES_USER: \${DB_USER:-django_user}
+      POSTGRES_PASSWORD: \${DB_PASSWORD:-django_password}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \${DB_USER:-django_user} -d \${DB_NAME:-django_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${PROJECT_NAME}_redis_prod
+    restart: always
+    networks:
+      - app_network
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${PROJECT_NAME}_web_prod
+    command: gunicorn ${PROJECT_NAME}.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2 --timeout 60
+    restart: always
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    env_file:
+      - .env
+    environment:
+      - DEBUG=False
+      - DB_HOST=db
+      - COLLECT_STATIC=1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app_network
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: ${PROJECT_NAME}_nginx_prod
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    depends_on:
+      - web
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_prod_data:
+  static_volume:
+  media_volume:
+EOF
+
+# 8.3: Nginx Reverse Proxy Configuration
+mkdir -p nginx
+cat << 'EOF' > nginx/nginx.conf
+upstream django_app {
+    server web:8000;
+}
+
+server {
+    listen 80;
+    server_name _;
+    client_max_body_size 100M;
+
+    # Static files serving
+    location /static/ {
+        alias /app/staticfiles/;
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # Media files serving
+    location /media/ {
+        alias /app/media/;
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+    }
+
+    # Proxy all other requests to Django Gunicorn
+    location / {
+        proxy_pass http://django_app;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+        proxy_connect_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}
+EOF
+
+log_success "docker-compose-dev.yml, docker-compose-prod.yml, and nginx/nginx.conf created."
+
+# Provide symlinks for docker-compose dev/prod with dots for versatility
+ln -sf docker-compose-dev.yml docker-compose.dev.yml 2>/dev/null || true
+ln -sf docker-compose-prod.yml docker-compose.prod.yml 2>/dev/null || true
+
+# --- Create Helper Run Scripts ---
+cat << 'EOF' > dev.sh
+#!/bin/bash
+# Helper to start development environment with docker-compose
+docker compose -f docker-compose-dev.yml up --build "$@"
+EOF
+chmod +x dev.sh
+
+cat << 'EOF' > prod.sh
+#!/bin/bash
+# Helper to start production environment with docker-compose
+docker compose -f docker-compose-prod.yml up -d --build "$@"
+EOF
+chmod +x prod.sh
+
+# --- Summary and Instructions ---
+echo ""
+echo -e "${GREEN}======================================================================${NC}"
+echo -e "${GREEN}🎉 CONGRATULATIONS! DJANGO PROJECT SETUP IS COMPLETE!${NC}"
+echo -e "${GREEN}======================================================================${NC}"
+echo ""
+echo -e "${BOLD}Project Name:${NC}     $PROJECT_NAME"
+echo -e "${BOLD}Location:${NC}         $(pwd)"
+echo ""
+echo -e "${CYAN}Generated Files & Structure:${NC}"
+echo "  ├── venv/                   # Python Virtual Environment"
+echo "  ├── manage.py               # Django CLI Entrypoint"
+echo "  ├── $PROJECT_NAME/          # Django Project Configuration & settings.py"
+echo "  ├── requirements.txt        # Frozen dependencies (DRF, CORS, Postgres, etc.)"
+echo "  ├── .env                    # Local environment variables & generated SECRET_KEY"
+echo "  ├── .env.example            # Environment template for team/deployment"
+echo "  ├── .gitignore              # Git ignore rules for Python, Django & Docker"
+echo "  ├── .dockerignore           # Docker build ignore rules"
+echo "  ├── Dockerfile              # Production & Dev ready Python 3.11 image"
+echo "  ├── entrypoint.sh           # Auto DB wait, migration & static collection"
+echo "  ├── docker-compose-dev.yml  # Dev compose (Django hot reload + Postgres + Redis)"
+echo "  ├── docker-compose-prod.yml # Prod compose (Gunicorn + Nginx + Postgres + Redis)"
+echo "  ├── nginx/nginx.conf        # Nginx reverse proxy configuration"
+echo "  ├── dev.sh                  # Quick run dev docker: ./dev.sh"
+echo "  └── prod.sh                 # Quick run prod docker: ./prod.sh"
+echo ""
+echo -e "${BOLD}How to Run Locally (without Docker):${NC}"
+echo "  1. source venv/bin/activate"
+echo "  2. python manage.py migrate"
+echo "  3. python manage.py runserver"
+echo ""
+echo -e "${BOLD}How to Run Development with Docker:${NC}"
+echo "  docker compose -f docker-compose-dev.yml up --build"
+echo "  (or simply: ./dev.sh)"
+echo "  -> Visit: http://localhost:8000"
+echo ""
+echo -e "${BOLD}How to Run Production on Server with Docker:${NC}"
+echo "  1. Adjust .env with your domain and secure passwords"
+echo "  2. docker compose -f docker-compose-prod.yml up -d --build"
+echo "  (or simply: ./prod.sh)"
+echo "  -> Visit: http://your-server-ip"
+echo ""
+echo -e "${GREEN}======================================================================${NC}"

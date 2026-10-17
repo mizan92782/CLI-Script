@@ -1,0 +1,72 @@
+#!/bin/bash
+set -e
+
+echo "=========================================="
+echo "  Docker + Docker Compose Installation"
+echo "=========================================="
+
+# Step 1: Update system and install prerequisites
+echo ""
+echo ">>> Step 1: Installing prerequisites..."
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg lsb-release
+
+# Step 2: Add Docker's official GPG key
+echo ""
+echo ">>> Step 2: Adding Docker GPG key..."
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Step 3: Add Docker repository to APT sources
+echo ""
+echo ">>> Step 3: Adding Docker repository..."
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Step 4: Update package index with Docker repo
+echo ""
+echo ">>> Step 4: Updating package index..."
+sudo apt-get update
+
+# Step 5: Install Docker Engine, CLI, Containerd, and Compose plugin
+echo ""
+echo ">>> Step 5: Installing Docker Engine, CLI, and Compose..."
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# Step 6: Start and enable Docker service
+echo ""
+echo ">>> Step 6: Starting Docker service..."
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Step 7: Add current user to docker group (optional - allows running without sudo)
+echo ""
+echo ">>> Step 7: Adding user to docker group..."
+sudo usermod -aG docker $USER
+
+# Step 8: Verify installation
+echo ""
+echo ">>> Step 8: Verifying installation..."
+echo ""
+echo "--- Docker Version ---"
+docker --version
+echo ""
+echo "--- Docker Compose Version ---"
+docker compose version
+echo ""
+echo "--- Containerd Version ---"
+containerd --version
+echo ""
+echo "--- Docker Service Status ---"
+sudo systemctl is-active docker
+
+echo ""
+echo "=========================================="
+echo "  Installation Complete!"
+echo "=========================================="
+echo ""
+echo "⚠️  IMPORTANT: Log out and log back in (or run 'newgrp docker') to use Docker without sudo"
+echo ""
+echo "Test Docker with: docker run hello-world"
